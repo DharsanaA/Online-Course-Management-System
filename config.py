@@ -13,10 +13,10 @@ class Config:
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
     MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "online_course_management")
 
-    SECRET_KEY = os.getenv("SECRET_KEY", "")
+    SECRET_KEY = os.getenv("861cb79f92061df7ffa95ac42a4169cc18f81fbe58f156234101864e84f4a3a1", "")
 
-    STAFF_SIGNUP_CODE = os.getenv("STAFF_SIGNUP_CODE", "")
-    ADMIN_SIGNUP_CODE = os.getenv("ADMIN_SIGNUP_CODE", "")
+    STAFF_SIGNUP_CODE = os.getenv("fZ9Lctl_JGK9E-ZL", "")
+    ADMIN_SIGNUP_CODE = os.getenv("fZ9Lctl_JGK9E-ZL", "")
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "0") == "1"
