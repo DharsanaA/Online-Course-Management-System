@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-4">My Profile</h1>
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+          {{ csrf_field() }}
+          <div class="d-flex align-items-center gap-3 mb-4">
+            {% if profile_user.profile_image %}
+              <img src="{{ url_for('files.profile_image', user_id=profile_user._id) }}" class="rounded-circle" width="80" height="80" alt="">
+            {% else %}
+              <div class="avatar-circle" style="width:80px;height:80px;font-size:2rem;">{{ profile_user.name[0] | upper }}</div>
+            {% endif %}
+            <div>
+              <div class="fw-bold fs-5">{{ profile_user.name }}</div>
+              <div class="text-secondary small">{{ profile_user.email }} · <span class="text-capitalize">{{ profile_user.role }}</span></div>
+              <div class="text-secondary small">Joined {{ profile_user.created_at | date }}</div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" for="name">Full name</label>
+              <input id="name" class="form-control" name="name" value="{{ profile_user.name }}" required minlength="2" maxlength="80"></div>
+            <div class="col-md-6"><label class="form-label" for="phone">Phone</label>
+              <input id="phone" class="form-control" name="phone" value="{{ profile_user.phone or '' }}" maxlength="20"></div>
+            {% if profile_user.role == 'staff' %}
+            <div class="col-12"><label class="form-label" for="expertise">Expertise</label>
+              <input id="expertise" class="form-control" name="expertise" value="{{ profile_user.expertise or '' }}" maxlength="300" placeholder="e.g. Python, Data Science"></div>
+            {% endif %}
+            <div class="col-12"><label class="form-label" for="bio">Biography</label>
+              <textarea id="bio" class="form-control" name="bio" rows="4" maxlength="1000">{{ profile_user.bio or '' }}</textarea></div>
+            <div class="col-12"><label class="form-label" for="profile_image">Profile image (PNG, JPG, WEBP — max 3 MB)</label>
+              <input id="profile_image" class="form-control" type="file" name="profile_image" accept="image/png,image/jpeg,image/webp"></div>
+          </div>
+          <button class="btn btn-primary mt-4" type="submit"><i class="bi bi-save me-1"></i>Save profile</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-3">Change password</h5>
+        <form method="post" action="{{ url_for('auth.change_password') }}">
+          {{ csrf_field() }}
+          <div class="mb-3"><label class="form-label" for="current_password">Current password</label>
+            <input id="current_password" type="password" class="form-control" name="current_password" required autocomplete="current-password"></div>
+          <div class="mb-3"><label class="form-label" for="new_password">New password</label>
+            <input id="new_password" type="password" class="form-control" name="new_password" required minlength="8" autocomplete="new-password">
+            <div class="form-text">At least 8 characters with a letter and a number.</div></div>
+          <div class="mb-3"><label class="form-label" for="confirm_password">Confirm new password</label>
+            <input id="confirm_password" type="password" class="form-control" name="confirm_password" required minlength="8" autocomplete="new-password"></div>
+          <button class="btn btn-outline-primary w-100" type="submit">Update password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

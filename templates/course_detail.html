@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress_bar, status_badge, stars, course_image, empty_state %}
+{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+{% set cdone = progress.percent if progress else 0 %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+      {{ course_image(course, '320px') }}
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <span class="badge text-bg-light">{{ course.category or 'General' }}</span>
+          <span class="badge text-bg-info-subtle text-info-emphasis">{{ course.difficulty }}</span>
+          <span class="badge text-bg-secondary">{{ course.duration_weeks }} weeks</span>
+          {% if course.status != 'published' %}<span class="badge text-bg-warning text-capitalize">{{ course.status }} (not public)</span>{% endif %}
+        </div>
+        <h1 class="h2 fw-bold">{{ course.title }}</h1>
+        <div class="d-flex flex-wrap gap-3 text-secondary small mb-3">
+          <span>{{ stars(stats.rating) }}</span>
+          <span><i class="bi bi-people me-1"></i>{{ stats.students }} enrolled</span>
+          <span><i class="bi bi-chat-square-text me-1"></i>{{ stats.reviews }} reviews</span>
+        </div>
+        <p class="lead fs-6">{{ course.description }}</p>
+        {% if course.overview %}
+          <h5 class="section-title mt-4">Overview</h5>
+          <p class="lesson-content">{{ course.overview }}</p>
+        {% endif %}
+        {% if course.objectives %}
+          <h5 class="section-title mt-4">What you will learn</h5>
+          <ul class="list-check">
+            {% for obj in course.objectives %}<li><i class="bi bi-check2-circle text-success me-2"></i>{{ obj }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if announcements %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-megaphone me-1"></i>Announcements</div>
+      <ul class="list-group list-group-flush">
+        {% for a in announcements %}
+          <li class="list-group-item">
+            <div class="fw-semibold">{{ a.title }} {% if not a.course_id %}<span class="badge text-bg-dark">Global</span>{% endif %}</div>
+            <div class="small">{{ a.message }}</div>
+            <div class="small text-secondary">{{ a.created_by_name }} · {{ a.created_at | dt }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-list-nested me-1"></i>Course content</div>
+      <div class="card-body">
+        {% if modules or lessons_by_module.get(None) %}
+          {% for module in modules %}
+            <div class="mb-3">
+              <h6 class="fw-bold mb-2"><i class="bi bi-folder2-open me-1 text-primary"></i>Module {{ loop.index }}: {{ module.title }}</h6>
+              {% if module.description %}<p class="small text-secondary">{{ module.description }}</p>{% endif %}
+              <ul class="list-group">
+                {% for lesson in lessons_by_module.get(module._id, []) %}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-play-btn me-2 text-secondary"></i>{{ lesson.title }}</span>
+                    {% if enrolled %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('student.lesson', course_id=course._id, lesson_id=lesson._id) }}">Open</a>
+                    {% else %}<i class="bi bi-lock text-secondary" title="Enroll to unlock"></i>{% endif %}
+                  </li>
+                {% else %}
+                  <li class="list-group-item text-secondary small">No lessons yet.</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endfor %}
+          {% if lessons_by_module.get(None) %}
+            <h6 class="fw-bold">Other lessons</h6>
+            <ul class="list-group mb-3">
+              {% for lesson in lessons_by_module.get(None) %}<li class="list-group-item">{{ lesson.title }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        {% else %}
+          {{ empty_state('bi-collection', 'The instructor has not added modules yet.') }}
+        {% endif %}
+
+        {% if quizzes %}
+          <h6 class="fw-bold mt-4"><i class="bi bi-ui-checks me-1"></i>Quizzes</h6>
+          <ul class="list-group mb-3">
+            {% for q in quizzes %}
+              <li class="list-group-item d-flex justify-content-between">
+                <span>{{ q.title }} {% if not q.published %}<span class="badge text-bg-secondary">Draft</span>{% endif %}</span>
+                <small class="text-secondary">Pass: {{ q.passing_percent }}% · {{ q.time_limit ~ ' min' if q.time_limit else 'No time limit' }}</small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if assignments %}
+          <h6 class="fw-bold mt-4"><i class="bi bi-file-earmark-text me-1"></i>Assignments</h6>
+          <ul class="list-group mb-3">
+            {% for a in assignments %}
+              <li class="list-group-item d-flex justify-content-between">
+                <span>{{ a.title }}</span><small class="text-secondary">Due {{ a.due_date | dt }}</small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if notes %}
+          <h6 class="fw-bold mt-4"><i class="bi bi-file-pdf me-1"></i>Course materials &amp; overview notes</h6>
+          <ul class="list-group">
+            {% for n in notes %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark me-2"></i>{{ n.title }}</span>
+                {% if user %}<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('files.material', material_id=n._id) }}"><i class="bi bi-download"></i> Download</a>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        <span><i class="bi bi-star me-1"></i>Reviews</span>
+        <span class="small text-secondary">{{ stats.reviews }} total</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for r in reviews %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between"><strong>{{ r.student_name }}</strong><small class="text-secondary">{{ r.created_at | date }}</small></div>
+            <div>{{ stars(r.rating) }}</div>
+            <p class="mb-0 small">{{ r.comment }}</p>
+          </li>
+        {% else %}
+          <li class="list-group-item text-secondary small">No reviews yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <aside class="col-lg-4">
+    <div class="card border-0 shadow-sm mb-4 sticky-lg-top" style="top: 90px;">
+      <div class="card-body p-4">
+        {% if user and user.role == 'student' %}
+          {% if enrolled %}
+            <div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>You are enrolled</div>
+            {{ progress_bar(cdone, 'Your progress') }}
+            <p class="small text-secondary mt-2 mb-3">{{ progress.lessons_done }} / {{ progress.lessons_total }} lessons completed · {{ status_badge(progress.status) }}</p>
+            <a class="btn btn-primary w-100 mb-2" href="{{ url_for('student.continue_learning', course_id=course._id) }}"><i class="bi bi-play-fill"></i> Continue Learning</a>
+            <form method="post" action="{{ url_for('courses.unenroll', course_id=course._id) }}" data-confirm="Cancel your enrollment in this course?">
+              {{ csrf_field() }}
+              <button class="btn btn-outline-danger btn-sm w-100" type="submit">Cancel enrollment</button>
+            </form>
+          {% elif course.status == 'published' %}
+            <form method="post" action="{{ url_for('courses.enroll', course_id=course._id) }}">
+              {{ csrf_field() }}
+              <button class="btn btn-primary btn-lg w-100 mb-2" type="submit"><i class="bi bi-plus-circle"></i> Enroll Now</button>
+            </form>
+          {% endif %}
+          {% if not enrolled %}
+            {% if in_wishlist %}
+              <form method="post" action="{{ url_for('courses.wishlist_remove', course_id=course._id) }}">{{ csrf_field() }}
+                <button class="btn btn-outline-secondary w-100" type="submit"><i class="bi bi-heart-fill text-danger"></i> Remove from wishlist</button></form>
+            {% else %}
+              <form method="post" action="{{ url_for('courses.wishlist_add', course_id=course._id) }}">{{ csrf_field() }}
+                <button class="btn btn-outline-secondary w-100" type="submit"><i class="bi bi-heart"></i> Add to wishlist</button></form>
+            {% endif %}
+          {% endif %}
+        {% elif user and user.role == 'admin' or (user and user.role == 'staff' and manager) %}
+          <div class="d-grid gap-2">
+            {% if first_lesson %}<a class="btn btn-primary" href="{{ url_for('student.lesson', course_id=course._id, lesson_id=first_lesson._id) }}">Preview first lesson</a>{% endif %}
+            {% if user.role == 'staff' %}<a class="btn btn-outline-primary" href="{{ url_for('staff.course_manage', course_id=course._id) }}">Manage course</a>
+            {% else %}<a class="btn btn-outline-primary" href="{{ url_for('admin.course_edit', course_id=course._id) }}">Edit course</a>
+              <a class="btn btn-outline-primary" href="{{ url_for('admin.course_analytics_page', course_id=course._id) }}">View analytics</a>{% endif %}
+          </div>
+        {% elif not user %}
+          <a class="btn btn-primary btn-lg w-100 mb-2" href="{{ url_for('auth.login', next=request.path) }}">Login to enroll</a>
+          <a class="btn btn-outline-primary w-100" href="{{ url_for('auth.register') }}">Create a free account</a>
+        {% endif %}
+
+        <hr>
+        <dl class="row small mb-0">
+          <dt class="col-5 text-secondary">Instructor</dt>
+          <dd class="col-7">{% if instructor %}<a href="{{ url_for('courses.instructor', instructor_id=instructor._id) }}">{{ instructor.name }}</a>{% else %}Unassigned{% endif %}</dd>
+          <dt class="col-5 text-secondary">Category</dt><dd class="col-7">{{ course.category or 'General' }}</dd>
+          <dt class="col-5 text-secondary">Difficulty</dt><dd class="col-7">{{ course.difficulty }}</dd>
+          <dt class="col-5 text-secondary">Duration</dt><dd class="col-7">{{ course.duration_weeks }} weeks</dd>
+          <dt class="col-5 text-secondary">Students</dt><dd class="col-7">{{ stats.students }}</dd>
+        </dl>
+      </div>
+    </div>
+    {% if user and user.role == 'student' and enrolled %}
+      {% set my_r = my_review %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="fw-bold">{{ 'Your review' if my_r else 'Rate this course' }}</h6>
+          {% if my_r %}
+            <div>{{ stars(my_r.rating) }}</div>
+            <p class="small mt-2 mb-0">{{ my_r.comment }}</p>
+          {% else %}
+            <form method="post" action="{{ url_for('courses.review', course_id=course._id) }}">
+              {{ csrf_field() }}
+              <div class="mb-2">
+                <select name="rating" class="form-select" required aria-label="Rating">
+                  <option value="">Choose rating…</option>
+                  {% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} star{{ 's' if n > 1 }}</option>{% endfor %}
+                </select>
+              </div>
+              <textarea name="comment" class="form-control mb-2" rows="3" minlength="10" maxlength="1000" placeholder="Share your experience (10–1000 characters)" required></textarea>
+              <button class="btn btn-outline-primary w-100" type="submit">Submit review</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "_macros.html" import course_card, empty_state, pagination %}
+{% block title %}Browse Courses{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="section-title h3 mb-0">Browse courses</h1>
+    <p class="text-secondary mb-0">{{ pg.total }} course(s) found</p>
+  </div>
+</div>
+<form method="get" class="card border-0 shadow-sm p-3 mb-4" role="search">
+  <div class="row g-2 align-items-end">
+    <div class="col-lg-3">
+      <label class="form-label small mb-1" for="q">Search</label>
+      <input id="q" class="form-control" name="q" value="{{ q }}" placeholder="Course, description, category or instructor" maxlength="100">
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="category">Category</label>
+      <select id="category" class="form-select" name="category">
+        <option value="">All categories</option>
+        {% for c in categories %}<option value="{{ c }}" {{ 'selected' if c == category }}>{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="duration">Duration</label>
+      <select id="duration" class="form-select" name="duration">
+        <option value="">Any duration</option>
+        {% for key, label in duration_labels.items() %}<option value="{{ key }}" {{ 'selected' if key == duration }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="min_rating">Minimum rating</label>
+      <select id="min_rating" class="form-select" name="min_rating">
+        <option value="">Any rating</option>
+        {% for v in ['3', '4', '4.5'] %}<option value="{{ v }}" {{ 'selected' if v == min_rating }}>{{ v }} ★ and up</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="tag">Tag</label>
+      <input id="tag" class="form-control" name="tag" value="{{ tag }}" placeholder="e.g. python" maxlength="30">
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="difficulty">Level</label>
+      <select id="difficulty" class="form-select" name="difficulty">
+        <option value="">Any level</option>
+        {% for d in difficulties %}<option {{ 'selected' if d == difficulty }}>{{ d }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="instructor">Instructor</label>
+      <select id="instructor" class="form-select" name="instructor">
+        <option value="">Any instructor</option>
+        {% for i in instructor_options %}<option value="{{ i._id }}" {{ 'selected' if i._id|string == instructor }}>{{ i.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="sort">Sort by</label>
+      <select id="sort" class="form-select" name="sort">
+        {% for key, label in sort_options.items() %}<option value="{{ key }}" {{ 'selected' if key == sort }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-1 d-grid">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i></button>
+    </div>
+  </div>
+  <div class="mt-2"><a class="small" href="{{ url_for('courses.catalog') }}">Clear filters</a></div>
+</form>
+{% if courses %}
+  <div class="row g-4">
+    {% for course in courses %}
+      <div class="col-sm-6 col-xl-4">{{ course_card(course, cstats, instructors.get(course.instructor_id), False) }}</div>
+    {% endfor %}
+  </div>
+  <div class="mt-4">{{ pagination(pg) }}</div>
+{% else %}
+  <div class="card border-0 shadow-sm">{{ empty_state('bi-search', 'No courses match your filters yet.') }}</div>
+{% endif %}
+{% endblock %}

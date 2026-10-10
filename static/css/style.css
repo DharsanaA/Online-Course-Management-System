@@ -1,0 +1,52 @@
+/* Online Course Management System — shared styles (Bootstrap 5 + these overrides) */
+:root {
+  --ocms-primary: #1e3a8a;
+  --ocms-accent: #f59e0b;
+  --ocms-surface: #f8fafc;
+}
+body { background: var(--ocms-surface); font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+.app-navbar { background: linear-gradient(90deg, #1e3a8a, #1d4ed8); box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+.app-navbar .nav-link { color: rgba(255,255,255,.88); }
+.app-navbar .nav-link:hover, .app-navbar .nav-link.active { color: #fff; }
+.avatar-circle {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--ocms-accent); color: #111;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+}
+.notif-badge { position: absolute; top: 0; right: -4px; font-size: .65rem; }
+.app-footer { background: #0f172a; color: #cbd5e1; }
+.app-footer a:hover { color: #fff; }
+.hero {
+  background: radial-gradient(circle at top right, #3b82f6 0%, #1e3a8a 55%, #0f172a 100%);
+  color: #fff; border-radius: 1.25rem; padding: 4rem 2.5rem; position: relative; overflow: hidden;
+}
+.hero h1 { font-weight: 800; letter-spacing: -.02em; }
+.hero .lead { color: rgba(255,255,255,.85); }
+.course-card { transition: transform .15s ease, box-shadow .15s ease; border-radius: 1rem; overflow: hidden; }
+.course-card:hover { transform: translateY(-3px); box-shadow: 0 .75rem 1.5rem rgba(15,23,42,.12) !important; }
+.course-cover { width: 100%; object-fit: cover; display: block; }
+.course-cover--placeholder {
+  background: linear-gradient(135deg, #60a5fa, #1e3a8a); color: rgba(255,255,255,.85);
+  display: flex; align-items: center; justify-content: center; font-size: 3rem;
+}
+.stat-card { border-radius: 1rem; }
+.stat-icon {
+  width: 52px; height: 52px; border-radius: 14px; display: inline-flex;
+  align-items: center; justify-content: center; font-size: 1.4rem;
+}
+.feature-icon { font-size: 2rem; color: var(--ocms-primary); }
+.app-progress { border-radius: 999px; background: #e2e8f0; }
+.app-progress .progress-bar { border-radius: 999px; transition: width .6s ease; background: linear-gradient(90deg, #2563eb, #22c55e); }
+.lesson-content { font-size: 1.05rem; line-height: 1.75; white-space: pre-wrap; }
+.sidebar-lessons a { text-decoration: none; }
+.sidebar-lessons .done { color: #16a34a; }
+.sidebar-lessons .current { font-weight: 600; }
+.question-card { border-left: 4px solid var(--ocms-primary); }
+.timer-badge { font-variant-numeric: tabular-nums; font-size: 1.1rem; }
+.table thead th { white-space: nowrap; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; color: #475569; }
+.card { border-radius: .9rem; }
+.section-title { font-weight: 700; color: var(--ocms-primary); }
+.nav-tabs .nav-link { color: #475569; }
+.nav-tabs .nav-link.active { color: var(--ocms-primary); font-weight: 600; }
+@media (max-width: 575.98px) {
+  .hero { padding: 2.25rem 1.25rem; }
+}

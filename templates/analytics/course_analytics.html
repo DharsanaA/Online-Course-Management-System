@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, progress_bar, empty_state %}
+{% block title %}Analytics · {{ course.title }}{% endblock %}
+{% block content %}
+<a class="small" href="{{ back }}"><i class="bi bi-arrow-left"></i> Back</a>
+<h1 class="section-title h3 mb-3">{{ course.title }} — Course analytics</h1>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-2">{{ stat_card('Total students', data.total_students, 'bi-people', 'primary') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Completed', data.completed, 'bi-trophy', 'success') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('In progress', data.pending_students, 'bi-hourglass-split', 'info') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Avg progress', data.avg_progress ~ '%', 'bi-graph-up', 'warning') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Avg quiz score', data.avg_quiz ~ '%', 'bi-ui-checks', 'secondary') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Avg rating', (data.rating ~ ' ★ (' ~ data.reviews ~ ')') if data.reviews else 'No ratings', 'bi-star', 'danger') }}</div>
+</div>
+<div class="row g-4 mb-4">
+  <div class="col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+    <h6 class="fw-bold">Progress distribution</h6>
+    <div style="height: 260px;"><canvas data-chart="bar" data-label="Students"
+      data-labels='["0-25%", "26-50%", "51-75%", "76-100%"]' data-values='{{ data.distribution | tojson }}'></canvas></div>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+    <h6 class="fw-bold">Quiz average by quiz</h6>
+    <div style="height: 260px;"><canvas data-chart="bar" data-label="Average %"
+      data-labels='{{ data.quiz_rows | map(attribute="title") | list | tojson }}' data-values='{{ data.quiz_rows | map(attribute="avg") | list | tojson }}'></canvas></div>
+  </div></div></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6" id="quiz-stats">
+    <div class="card border-0 shadow-sm"><div class="card-header bg-white fw-semibold">Quiz statistics</div>
+      <div class="table-responsive"><table class="table mb-0 align-middle">
+        <thead><tr><th>Quiz</th><th>Attempts</th><th>Average</th><th>Passed</th></tr></thead>
+        <tbody>{% for q in data.quiz_rows %}<tr><td>{{ q.title }}</td><td>{{ q.attempts }}</td><td>{{ q.avg }}%</td><td>{{ q.passed }}</td></tr>
+        {% else %}<tr><td colspan="4">{{ empty_state('bi-ui-checks', 'No quiz attempts yet.') }}</td></tr>{% endfor %}</tbody>
+      </table></div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm"><div class="card-header bg-white fw-semibold">Assignment statistics</div>
+      <div class="table-responsive"><table class="table mb-0 align-middle">
+        <thead><tr><th>Assignment</th><th>Submitted</th><th>Evaluated</th><th>Late</th><th>Pending</th></tr></thead>
+        <tbody>{% for a in data.assignment_rows %}<tr><td>{{ a.title }}</td><td>{{ a.submitted }}</td><td>{{ a.evaluated }}</td><td>{{ a.late }}</td><td>{{ a.pending }}</td></tr>
+        {% else %}<tr><td colspan="5">{{ empty_state('bi-file-earmark', 'No submissions yet.') }}</td></tr>{% endfor %}</tbody>
+      </table></div></div>
+  </div>
+  <div class="col-12">
+    <div class="card border-0 shadow-sm"><div class="card-header bg-white fw-semibold">Students &amp; progress</div>
+      <div class="table-responsive"><table class="table mb-0 align-middle">
+        <thead><tr><th>Student</th><th>Enrolled</th><th style="min-width:200px;">Progress</th><th>Lessons</th><th>Quiz avg</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for row in students|default([]) %}
+            <tr><td>{{ row.student.name }}<br><small class="text-secondary">{{ row.student.email }}</small></td>
+              <td class="small">{{ row.enrollment.enrolled_at | date }}</td>
+              <td>{{ progress_bar(row.progress.percent, '', 6) }}</td>
+              <td>{{ row.progress.lessons_done }} / {{ row.progress.lessons_total }}</td>
+              <td>{{ (row.quiz_avg ~ '%') if row.quiz_avg is not none else '—' }}</td>
+              <td>{{ row.progress.status | replace('_', ' ') | title }}</td></tr>
+          {% else %}<tr><td colspan="6">{{ empty_state('bi-people', 'No students enrolled yet.') }}</td></tr>{% endfor %}
+        </tbody>
+      </table></div></div>
+  </div>
+</div>
+{% endblock %}

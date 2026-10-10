@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress_bar %}
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <aside class="col-lg-3 order-2 order-lg-1">
+    <div class="card border-0 shadow-sm sticky-lg-top" style="top: 90px;">
+      <div class="card-header bg-white">
+        <a class="small" href="{{ url_for('courses.detail', course_id=course._id) }}"><i class="bi bi-arrow-left"></i> {{ course.title }}</a>
+        {% if progress %}<div class="mt-2">{{ progress_bar(progress.percent, 'Course progress', 8) }}</div>{% endif %}
+      </div>
+      <div class="list-group list-group-flush sidebar-lessons" style="max-height: 70vh; overflow-y: auto;">
+        {% for l in lessons %}
+          <a class="list-group-item list-group-item-action d-flex gap-2 align-items-start {{ 'active' if l._id == lesson._id }}"
+             href="{{ url_for('student.lesson', course_id=course._id, lesson_id=l._id) }}">
+            <i class="bi {{ 'bi-check-circle-fill done' if l._id in (done_ids or []) else 'bi-circle' }} mt-1"></i>
+            <span class="small">{{ loop.index }}. {{ l.title }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </aside>
+
+  <section class="col-lg-9 order-1 order-lg-2">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb small mb-2">
+      <li class="breadcrumb-item">{{ course.title }}</li>
+      {% if module %}<li class="breadcrumb-item">{{ module.title }}</li>{% endif %}
+      <li class="breadcrumb-item active">Lesson {{ index + 1 }} of {{ lessons|length }}</li>
+    </ol></nav>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4 p-lg-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <h1 class="h3 fw-bold mb-0">{{ lesson.title }}</h1>
+          {% if user.role == 'student' %}
+            {% if completed %}<span class="badge text-bg-success fs-6"><i class="bi bi-check2"></i> Completed</span>{% endif %}
+          {% else %}<span class="badge text-bg-info">Preview mode</span>{% endif %}
+        </div>
+        <div class="lesson-content">{{ lesson.content }}</div>
+
+        {% if materials %}
+          <hr>
+          <h6 class="fw-bold"><i class="bi bi-paperclip me-1"></i>Lesson materials</h6>
+          <ul class="list-group mb-2">
+            {% for m in materials %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ m.title }} <small class="text-secondary">({{ m.original_name }})</small></span>
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('files.material', material_id=m._id) }}"><i class="bi bi-download"></i> Download</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="card-footer bg-white d-flex flex-wrap justify-content-between gap-2 p-3">
+        <div>
+          {% if prev_lesson %}<a class="btn btn-outline-secondary" href="{{ url_for('student.lesson', course_id=course._id, lesson_id=prev_lesson._id) }}"><i class="bi bi-arrow-left"></i> Previous</a>{% endif %}
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          {% if user.role == 'student' and not completed %}
+            <form method="post" action="{{ url_for('student.complete_lesson', course_id=course._id, lesson_id=lesson._id) }}">
+              {{ csrf_field() }}
+              <button class="btn btn-success" type="submit"><i class="bi bi-check2-circle"></i> Mark as completed</button>
+            </form>
+          {% endif %}
+          {% if next_lesson %}
+            <a class="btn btn-primary" href="{{ url_for('student.lesson', course_id=course._id, lesson_id=next_lesson._id) }}">Next lesson <i class="bi bi-arrow-right"></i></a>
+          {% elif user.role == 'student' %}
+            <a class="btn btn-primary" href="{{ url_for('student.my_learning') }}">Finish course <i class="bi bi-flag"></i></a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

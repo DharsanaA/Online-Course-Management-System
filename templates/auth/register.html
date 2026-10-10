@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-5">
+    <div class="card border-0 shadow">
+      <div class="card-body p-4">
+        <h1 class="h4 fw-bold mb-1">Create your account</h1>
+        <p class="text-secondary small mb-4">Students can sign up freely. Staff and admin accounts need a code from the platform admin.</p>
+        <form method="post" novalidate>
+          {{ csrf_field() }}
+          <div class="mb-3">
+            <span class="form-label d-block">I am a</span>
+            <div class="btn-group w-100" role="group" aria-label="Role">
+              {% for value, label in [('student', 'Student'), ('staff', 'Staff'), ('admin', 'Admin')] %}
+                <input type="radio" class="btn-check" name="role" id="role_{{ value }}" value="{{ value }}"
+                       {{ 'checked' if form.get('role', 'student') == value else '' }}>
+                <label class="btn btn-outline-primary" for="role_{{ value }}">{{ label }}</label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3" id="signup-code-box">
+            <label class="form-label" for="signup_code">Staff / Admin code <span class="text-secondary small">(only for staff or admin)</span></label>
+            <input id="signup_code" type="password" class="form-control" name="signup_code" value="" autocomplete="off">
+          </div>
+          <div class="mb-3"><label class="form-label" for="name">Full name</label>
+            <input id="name" class="form-control" name="name" value="{{ form.get('name', '') }}" required minlength="2" maxlength="80"></div>
+          <div class="mb-3"><label class="form-label" for="email">Email</label>
+            <input id="email" type="email" class="form-control" name="email" value="{{ form.get('email', '') }}" required autocomplete="email"></div>
+          <div class="mb-3"><label class="form-label" for="password">Password</label>
+            <input id="password" type="password" class="form-control" name="password" required minlength="8" autocomplete="new-password">
+            <div class="form-text">At least 8 characters, including a letter and a number.</div></div>
+          <div class="mb-4"><label class="form-label" for="confirm_password">Confirm password</label>
+            <input id="confirm_password" type="password" class="form-control" name="confirm_password" required minlength="8" autocomplete="new-password"></div>
+          <button class="btn btn-primary w-100 btn-lg" type="submit">Create account</button>
+        </form>
+        <p class="text-center small mt-3 mb-0">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Only show the code box when staff or admin is selected.
+  (function () {
+    const box = document.getElementById('signup-code-box');
+    const input = document.getElementById('signup_code');
+    function sync() {
+      const role = document.querySelector('input[name="role"]:checked');
+      const needsCode = role && role.value !== 'student';
+      box.style.display = needsCode ? '' : 'none';
+      input.required = !!needsCode;
+    }
+    document.querySelectorAll('input[name="role"]').forEach(function (r) { r.addEventListener('change', sync); });
+    sync();
+  })();
+</script>
+{% endblock %}

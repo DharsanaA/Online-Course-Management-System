@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit course' if course else 'New course' }}{% endblock %}
+{% block content %}
+<a class="small" href="{{ url_for('admin.courses') }}"><i class="bi bi-arrow-left"></i> All courses</a>
+<h1 class="section-title h3 mb-3">{{ 'Edit course' if course else 'Create a course' }}</h1>
+<form method="post" enctype="multipart/form-data" novalidate>
+  {{ csrf_field() }}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+        <div class="mb-3"><label class="form-label" for="title">Course title</label>
+          <input id="title" class="form-control form-control-lg" name="title" value="{{ form.get('title', '') }}" required minlength="3" maxlength="120"></div>
+        <div class="mb-3"><label class="form-label" for="description">Short description</label>
+          <textarea id="description" class="form-control" name="description" rows="3" required minlength="10" maxlength="2000">{{ form.get('description', '') }}</textarea></div>
+        <div class="mb-3"><label class="form-label" for="overview">Overview</label>
+          <textarea id="overview" class="form-control" name="overview" rows="5" maxlength="5000">{{ form.get('overview', '') }}</textarea></div>
+        <div class="mb-0"><label class="form-label" for="objectives">Learning objectives (one per line)</label>
+          <textarea id="objectives" class="form-control" name="objectives" rows="4">{{ form.get('objectives', '') }}</textarea></div>
+      </div></div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+        <h6 class="fw-bold">Publishing</h6>
+        <div class="mb-2"><label class="form-label small" for="status">Status</label>
+          <select id="status" class="form-select" name="status">
+            {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if form.get('status', 'draft') == s }}>{{ s | capitalize }}</option>{% endfor %}
+          </select>
+          <div class="form-text">Only published courses appear publicly.</div></div>
+        <div class="mb-2"><label class="form-label small" for="instructor_id">Instructor (staff in charge)</label>
+          <select id="instructor_id" class="form-select" name="instructor_id" required>
+            <option value="">Choose an instructor…</option>
+            {% for s in staff %}<option value="{{ s._id }}" {{ 'selected' if form.get('instructor_id', '')|string == s._id|string or (course and course.instructor_id == s._id) }}>{{ s.name }}</option>{% endfor %}
+          </select>
+          {% if not staff %}<div class="form-text text-danger">Create a staff account first (Users → Add user).</div>{% endif %}</div>
+      </div></div>
+
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+        <h6 class="fw-bold">Details</h6>
+        <div class="mb-2"><label class="form-label small" for="category">Category</label>
+          <input id="category" class="form-control" name="category" list="category-list" value="{{ form.get('category', '') }}" maxlength="60" placeholder="e.g. Programming"></div>
+        <div class="mb-2"><label class="form-label small" for="difficulty">Level</label>
+          <select id="difficulty" class="form-select" name="difficulty">
+            {% for d in difficulties %}<option {{ 'selected' if form.get('difficulty', 'Beginner') == d }}>{{ d }}</option>{% endfor %}
+          </select></div>
+        <div class="mb-2"><label class="form-label small" for="duration_weeks">Duration (weeks)</label>
+          <input id="duration_weeks" type="number" class="form-control" name="duration_weeks" min="1" max="104" value="{{ form.get('duration_weeks', 4) }}"></div>
+        <div class="mb-0"><label class="form-label small" for="tags">Tags (comma separated)</label>
+          <input id="tags" class="form-control" name="tags" value="{{ form.get('tags', '') }}" placeholder="python, beginner, data" maxlength="300"></div>
+      </div></div>
+
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+        <h6 class="fw-bold">Course image</h6>
+        {% if course and course.image %}
+          <img src="{{ url_for('files.course_image', course_id=course._id) }}" class="course-cover rounded mb-2" style="height:130px" alt="">
+        {% endif %}
+        <input class="form-control" type="file" name="image" accept="image/png,image/jpeg,image/webp">
+        <div class="form-text">PNG, JPG or WEBP, up to 3 MB. Shown on cards and the course page.</div>
+      </div></div>
+    </div>
+  </div>
+  <datalist id="category-list">
+    <option value="Programming"><option value="Web Development"><option value="Data Science"><option value="Design"><option value="Business">
+  </datalist>
+  <div class="d-flex justify-content-between mt-2 mb-5">
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.courses') }}">Cancel</a>
+    <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-save"></i> {{ 'Save changes' if course else 'Create course' }}</button>
+  </div>
+</form>
+{% endblock %}

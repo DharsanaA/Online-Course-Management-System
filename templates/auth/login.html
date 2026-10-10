@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-4">
+    <div class="card border-0 shadow">
+      <div class="card-body p-4">
+        <div class="text-center mb-3">
+          <i class="bi bi-mortarboard-fill text-primary fs-1"></i>
+          <h1 class="h4 fw-bold mt-2">Welcome back</h1>
+          <p class="text-secondary small">Log in to continue your learning journey</p>
+        </div>
+        <form method="post" novalidate>
+          {{ csrf_field() }}
+          <div class="mb-3">
+            <label class="form-label" for="email">Email</label>
+            <input id="email" type="email" class="form-control" name="email" value="{{ email }}" required autofocus autocomplete="username">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="password">Password</label>
+            <input id="password" type="password" class="form-control" name="password" required autocomplete="current-password">
+          </div>
+          <button class="btn btn-primary w-100 btn-lg" type="submit">Login</button>
+        </form>
+        <p class="text-center small mt-3 mb-0">New student? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

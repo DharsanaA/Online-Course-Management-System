@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, empty_state %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div>
+    <h1 class="section-title h3 mb-0">Admin dashboard</h1>
+    <p class="text-secondary mb-0">Platform-wide statistics, calculated live from MongoDB.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="{{ url_for('admin.course_new') }}"><i class="bi bi-plus-lg"></i> New course</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('admin.users') }}"><i class="bi bi-person-plus"></i> Manage users</a>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">{{ stat_card('Total students', data.cards.students, 'bi-mortarboard', 'primary') }}</div>
+  <div class="col-6 col-xl-3">{{ stat_card('Total staff', data.cards.staff, 'bi-person-badge', 'info') }}</div>
+  <div class="col-6 col-xl-3">{{ stat_card('Total courses', data.cards.courses, 'bi-journal-bookmark', 'secondary') }}</div>
+  <div class="col-6 col-xl-3">{{ stat_card('Total enrollments', data.cards.enrollments, 'bi-clipboard-check', 'success') }}</div>
+  <div class="col-6 col-xl-3">{{ stat_card('Completed courses', data.cards.completed, 'bi-trophy', 'warning') }}</div>
+  <div class="col-6 col-xl-3">{{ stat_card('Certificates', data.cards.certificates, 'bi-award', 'danger') }}</div>
+  <div class="col-6 col-xl-3">{{ stat_card('Reviews', data.cards.reviews, 'bi-chat-square-text', 'info') }}</div>
+  <div class="col-6 col-xl-3">{{ stat_card('Average rating', data.cards.avg_rating ~ ' / 5' if data.cards.reviews else 'No reviews', 'bi-star-fill', 'warning') }}</div>
+</div>
+
+<div class="row g-4 mb-4">
+  {% set charts = [
+    ('monthly', 'Monthly enrollments (last 12 months)', 'bar', 'Enrollments'),
+    ('course_enrollment', 'Course-wise enrollment', 'bar', 'Students'),
+    ('wishlist', 'Most wishlisted courses', 'bar', 'Wishlists'),
+    ('completion', 'Course completion rate (%)', 'bar', 'Completion %'),
+    ('quiz_scores', 'Average quiz score by course (%)', 'bar', 'Average %'),
+    ('activity', 'Student activity — last 7 days', 'line', 'Actions'),
+    ('categories', 'Category-wise courses', 'doughnut', 'Courses'),
+    ('instructors', 'Instructor-wise student count', 'bar', 'Students'),
+  ] %}
+  {% for key, title, kind, label in charts %}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100"><div class="card-body">
+        <h6 class="fw-bold">{{ title }}</h6>
+        <div style="height: 260px;" class="d-flex flex-column justify-content-center">
+          <canvas data-chart="{{ kind }}" data-label="{{ label }}"
+                  data-labels='{{ data.charts[key].labels | tojson }}' data-values='{{ data.charts[key]['values'] | tojson }}'></canvas>
+        </div>
+      </div></div>
+    </div>
+  {% endfor %}
+</div>
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-megaphone me-1"></i>Global announcements</div>
+      <ul class="list-group list-group-flush">
+        {% for a in announcements %}
+          <li class="list-group-item"><strong>{{ a.title }}</strong><div class="small">{{ a.message }}</div>
+            <small class="text-secondary">{{ a.created_by_name }} · {{ a.created_at | dt }}</small></li>
+        {% else %}
+          <li class="list-group-item">{{ empty_state('bi-megaphone', 'No global announcements yet.') }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Post a global announcement</div>
+      <form method="post" action="{{ url_for('admin.global_announcement') }}" class="card-body">
+        {{ csrf_field() }}
+        <input class="form-control mb-2" name="title" maxlength="150" placeholder="Title" required>
+        <textarea class="form-control mb-2" name="message" rows="3" maxlength="2000" placeholder="Message to all active students" required></textarea>
+        <button class="btn btn-primary w-100">Publish to all students</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

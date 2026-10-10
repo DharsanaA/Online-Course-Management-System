@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm mb-3 sticky-top" style="top: 80px; z-index: 5;">
+      <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+        <div>
+          <h1 class="h4 fw-bold mb-0">{{ quiz.title }}</h1>
+          <small class="text-secondary">{{ questions|length }} questions · Pass mark {{ quiz.passing_percent }}% · Attempts left: {{ attempts_left }}</small>
+        </div>
+        {% if remaining is not none %}
+          <div class="text-end">
+            <div class="small text-secondary">Time remaining</div>
+            <span id="quiz-timer" class="timer-badge fw-bold" data-seconds="{{ remaining }}">--:--</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <form id="quiz-form" method="post" action="{{ url_for('student.quiz_submit', quiz_id=quiz._id) }}">
+      {{ csrf_field() }}
+      {% for q in questions %}
+        <div class="card border-0 shadow-sm question-card mb-3">
+          <div class="card-body">
+            <h5 class="fw-semibold">Q{{ loop.index }}. {{ q.text }}</h5>
+            {% for opt in q.options %}
+              <div class="form-check py-1">
+                <input class="form-check-input" type="radio" name="q{{ loop.index0 }}" id="q{{ loop.index0 }}_{{ loop.index0 }}_{{ loop.index }}" value="{{ loop.index0 }}" required>
+                <label class="form-check-label" for="q{{ loop.index0 }}_{{ loop.index0 }}_{{ loop.index }}">{{ opt }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+      <div class="d-flex justify-content-between align-items-center mb-5">
+        <a class="btn btn-outline-secondary" href="{{ url_for('student.quizzes') }}">Leave quiz</a>
+        <button class="btn btn-primary btn-lg" type="submit" data-confirm="Submit your answers now? You cannot change them afterwards.">Submit quiz</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

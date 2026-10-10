@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import course_image, stars, empty_state %}
+{% block title %}My Wishlist{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-3"><i class="bi bi-heart me-2"></i>My Wishlist</h1>
+{% if rows %}
+<div class="row g-4">
+  {% for row in rows %}
+    {% set c = row.course %}
+    {% set s = cstats.get(c._id, {'students': 0, 'rating': 0}) %}
+    <div class="col-md-6 col-xl-4">
+      <div class="card border-0 shadow-sm h-100 overflow-hidden">
+        {{ course_image(c, '170px') }}
+        <div class="card-body d-flex flex-column">
+          <h5 class="fw-bold">{{ c.title }}</h5>
+          <p class="small text-secondary mb-2">{{ c.category or 'General' }} · {{ c.difficulty }} · {{ s.students }} students · {{ stars(s.rating) }}</p>
+          <p class="small text-secondary">Added {{ row.added_at | date }}</p>
+          <div class="mt-auto d-flex gap-2">
+            <a class="btn btn-primary btn-sm flex-grow-1" href="{{ url_for('courses.detail', course_id=c._id) }}">View course</a>
+            <form method="post" action="{{ url_for('courses.wishlist_remove', course_id=c._id) }}">
+              {{ csrf_field() }}<button class="btn btn-outline-danger btn-sm" type="submit" aria-label="Remove">
+                <i class="bi bi-trash"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="card border-0 shadow-sm">{{ empty_state('bi-heart', 'Your wishlist is empty. Save courses you want to take later.') }}</div>
+{% endif %}
+{% endblock %}

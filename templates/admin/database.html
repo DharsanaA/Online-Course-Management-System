@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Database insights{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-1">Database insights</h1>
+<p class="text-secondary mb-4">Live MongoDB queries behind this page. Each section shows which operators it uses.</p>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white">
+    <span class="fw-semibold">Course overview</span>
+    <span class="badge text-bg-light ms-2 small">$lookup + $project + $size</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Course</th><th>Instructor</th><th>Students</th><th>Student details (name · email)</th></tr></thead>
+      <tbody>
+        {% for c in overview %}
+          <tr>
+            <td class="fw-semibold">{{ c.title }}</td>
+            <td>{{ c.instructor_name or '—' }}</td>
+            <td>{{ c.number_of_students }}</td>
+            <td class="small">
+              {% for s in c.students %}<div>{{ s.name }} · <span class="text-secondary">{{ s.email }}</span></div>
+              {% else %}<span class="text-secondary">No students yet</span>{% endfor %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-secondary">No courses yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white">
+    <span class="fw-semibold">Course → modules → lessons</span>
+    <span class="badge text-bg-light ms-2 small">$lookup + $unwind + $group</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Course</th><th class="text-end">Modules</th><th class="text-end">Lessons</th></tr></thead>
+      <tbody>
+        {% for s in structure %}
+          <tr><td class="fw-semibold">{{ s.title }}</td><td class="text-end">{{ s.modules }}</td><td class="text-end">{{ s.lessons }}</td></tr>
+        {% else %}
+          <tr><td colspan="3" class="text-secondary">No courses yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white">
+    <span class="fw-semibold">Index proof (explain)</span>
+    <span class="badge text-bg-light ms-2 small">IXSCAN = index used · COLLSCAN = full scan</span>
+  </div>
+  <ul class="list-group list-group-flush">
+    {% for p in plans %}
+      <li class="list-group-item">
+        <div class="fw-semibold">{{ p.label }}</div>
+        <code class="small">{{ p.query }}</code>
+        <div class="mt-1">Plan:
+          {% for stage in p.plan.stages %}<span class="badge {{ 'text-bg-success' if stage == 'IXSCAN' else ('text-bg-warning' if stage == 'COLLSCAN' else 'text-bg-secondary') }} me-1">{{ stage }}</span>{% endfor %}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

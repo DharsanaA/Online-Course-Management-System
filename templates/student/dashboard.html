@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress_bar, stat_card, course_card, status_badge, empty_state %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div>
+    <h1 class="section-title h3 mb-0">Welcome back, {{ user.name.split(' ')[0] }}!</h1>
+    <p class="text-secondary mb-0">Here is your learning overview.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('courses.catalog') }}"><i class="bi bi-compass me-1"></i>Explore courses</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-2">{{ stat_card('Enrolled', rows|length, 'bi-book', 'primary') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('In progress', in_progress, 'bi-hourglass-split', 'info') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Completed', completed, 'bi-check2-circle', 'success') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Avg quiz score', (avg_score ~ '%') if avg_score is not none else '—', 'bi-graph-up', 'warning') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Certificates', cert_count, 'bi-award', 'danger') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Wishlist', wishlist_count, 'bi-heart', 'secondary') }}</div>
+</div>
+
+{% if continue_item %}
+<div class="card border-0 shadow-sm mb-4 continue-card">
+  <div class="card-body p-4 d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
+    <div>
+      <div class="text-uppercase small fw-semibold text-primary">Continue Learning</div>
+      <h4 class="fw-bold mb-1">{{ continue_item.course.title }}</h4>
+      <div class="text-secondary small">{% if continue_item.module %}Module: {{ continue_item.module.title }} → {% endif %}{{ continue_item.lesson.title }}</div>
+      <div class="mt-2" style="max-width: 420px;">{{ progress_bar(continue_item.progress.percent, continue_item.progress.percent|string ~ '% completed') }}</div>
+    </div>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('student.continue_learning', course_id=continue_item.course._id) }}"><i class="bi bi-play-fill"></i> Continue Learning</a>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-collection me-1"></i>My Learning</span>
+        <a class="small" href="{{ url_for('student.my_learning') }}">View all</a>
+      </div>
+      <div class="card-body">
+        {% for r in rows[:4] %}
+          <div class="d-flex gap-3 align-items-center mb-3 pb-3 border-bottom">
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between"><a class="fw-semibold" href="{{ url_for('courses.detail', course_id=r.course._id) }}">{{ r.course.title }}</a>{{ status_badge(r.progress.status) }}</div>
+              {{ progress_bar(r.progress.percent, '', 8) }}
+              <div class="small text-secondary">{{ r.progress.lessons_done }} / {{ r.progress.lessons_total }} lessons</div>
+            </div>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('student.continue_learning', course_id=r.course._id) }}">Continue</a>
+          </div>
+        {% else %}
+          {{ empty_state('bi-book', 'You are not enrolled in any course yet.') }}
+        {% endfor %}
+        {% if rows %}
+          <canvas data-chart="bar" data-label="Progress %" data-labels='{{ chart.labels | tojson }}' data-values='{{ chart['values'] | tojson }}' height="140"></canvas>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-clock-history me-1"></i>Recent quiz results</div>
+      <ul class="list-group list-group-flush">
+        {% for a in recent_attempts %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('student.quiz_result', attempt_id=a._id) }}">Quiz attempt #{{ a.attempt_no }}</a>
+            <span>{{ a.score }}/{{ a.total_marks }} · {{ a.percentage }}%
+              {% if a.passed %}<span class="badge text-bg-success ms-1">Passed</span>{% else %}<span class="badge text-bg-danger ms-1">Not passed</span>{% endif %}</span>
+          </li>
+        {% else %}
+          <li class="list-group-item text-secondary small">No quizzes attempted yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-lightning-charge me-1"></i>Recent activity</div>
+      <ul class="list-group list-group-flush">
+        {% for a in activity %}
+          <li class="list-group-item small"><i class="bi bi-check-circle-fill text-success me-2"></i>{{ a.action }}{% if a.details %} — <span class="text-secondary">{{ a.details }}</span>{% endif %}<span class="float-end text-secondary">{{ a.created_at | dt('%d %b, %I:%M %p') }}</span></li>
+        {% else %}
+          <li class="list-group-item text-secondary small">Your activity will appear here.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-calendar-event me-1"></i>Upcoming deadlines</div>
+      <ul class="list-group list-group-flush">
+        {% for d in deadlines %}
+          <li class="list-group-item">
+            <a class="fw-semibold" href="{{ d.link }}">{{ d.title }}</a>
+            <div class="small text-secondary">{{ d.kind }} · {{ d.course }}</div>
+            <div class="small">Due {{ d.due | dt }}</div>
+          </li>
+        {% else %}
+          <li class="list-group-item text-secondary small">No upcoming deadlines.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-award me-1"></i>Certificates</div>
+      <ul class="list-group list-group-flush">
+        {% for c in certificates %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><strong>{{ c.course_title }}</strong><br><small class="text-secondary">{{ c.certificate_id }}</small></span>
+            <a class="btn btn-sm btn-outline-success" href="{{ url_for('certificates.certificate_pdf', cert_id=c._id, download=1) }}">PDF</a>
+          </li>
+        {% else %}
+          <li class="list-group-item text-secondary small">Complete a course to earn your first certificate.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-heart me-1"></i>Wishlist</div>
+      <ul class="list-group list-group-flush">
+        {% for c in wish_rows %}
+          <li class="list-group-item"><a href="{{ url_for('courses.detail', course_id=c._id) }}">{{ c.title }}</a></li>
+        {% else %}
+          <li class="list-group-item text-secondary small">Save courses you're interested in.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-stars me-1"></i>Recommended for you</div>
+      <div class="card-body">
+        {% for c in recommended %}
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <a href="{{ url_for('courses.detail', course_id=c._id) }}">{{ c.title }}</a>
+            <span class="badge text-bg-light">{{ c.difficulty }}</span>
+          </div>
+        {% else %}
+          <p class="small text-secondary mb-0">Recommendations appear once courses are published.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{% endblock %}

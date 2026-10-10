@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress_bar, status_badge, empty_state %}
+{% block title %}{{ person.name }}{% endblock %}
+{% block content %}
+<a class="small" href="{{ url_for('admin.users') }}"><i class="bi bi-arrow-left"></i> All users</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 my-2">
+  <h1 class="section-title h3 mb-0">{{ person.name }} <span class="badge text-bg-light text-capitalize">{{ person.role }}</span></h1>
+  <div class="d-flex gap-2">
+    <form method="post" action="{{ url_for('admin.user_toggle', user_id=person._id) }}">{{ csrf_field() }}
+      <button class="btn btn-outline-warning btn-sm">{{ 'Deactivate account' if person.get('is_active', True) else 'Activate account' }}</button></form>
+    <form method="post" action="{{ url_for('admin.user_delete', user_id=person._id) }}" data-confirm="Permanently delete this account?">{{ csrf_field() }}
+      <button class="btn btn-outline-danger btn-sm">Delete</button></form>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Edit details</div>
+      <form method="post" action="{{ url_for('admin.user_update', user_id=person._id) }}" class="card-body">
+        {{ csrf_field() }}
+        <div class="mb-2"><label class="form-label small">Name</label><input class="form-control" name="name" value="{{ person.name }}" required minlength="2"></div>
+        <div class="mb-2"><label class="form-label small">Email</label><input type="email" class="form-control" name="email" value="{{ person.email }}" required></div>
+        <div class="mb-2"><label class="form-label small">Role</label>
+          <select class="form-select" name="role">
+            {% for r in ['admin', 'staff', 'student'] %}<option value="{{ r }}" {{ 'selected' if person.role == r }}>{{ r | capitalize }}</option>{% endfor %}
+          </select></div>
+        <div class="mb-2"><label class="form-label small">Phone</label><input class="form-control" name="phone" value="{{ person.phone or '' }}" maxlength="20"></div>
+        {% if person.role == 'staff' %}
+          <div class="mb-2"><label class="form-label small">Expertise</label><input class="form-control" name="expertise" value="{{ person.expertise or '' }}" maxlength="300"></div>
+          <div class="mb-2"><label class="form-label small">Biography</label><textarea class="form-control" name="bio" rows="3" maxlength="1000">{{ person.bio or '' }}</textarea></div>
+        {% endif %}
+        <div class="mb-3"><label class="form-label small">New password (optional)</label><input type="password" class="form-control" name="password" minlength="8" autocomplete="new-password"></div>
+        <button class="btn btn-primary w-100">Save changes</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    {% if person.role == 'student' %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">Enrollments &amp; progress</div>
+        <div class="table-responsive"><table class="table align-middle mb-0">
+          <thead><tr><th>Course</th><th>Enrolled</th><th style="min-width:140px;">Progress</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in enrollments %}
+              <tr><td>{{ row.course.title }}</td><td class="small">{{ row.enrollment.enrolled_at | date }}</td>
+                <td>{{ progress_bar(row.progress.percent, '', 6) }}</td><td>{{ status_badge(row.progress.status) }}</td></tr>
+            {% else %}<tr><td colspan="4">{{ empty_state('bi-book', 'Not enrolled in any course.') }}</td></tr>{% endfor %}
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">Quiz results &amp; certificates</div>
+        <ul class="list-group list-group-flush">
+          {% for a in attempts %}<li class="list-group-item small d-flex justify-content-between"><span>Attempt #{{ a.attempt_no }} · {{ a.student_name }}</span><span>{{ a.percentage }}% · {{ 'Passed' if a.passed else 'Not passed' }} · {{ a.attempted_at | date }}</span></li>{% endfor %}
+          {% for c in certificates %}<li class="list-group-item small d-flex justify-content-between"><span><i class="bi bi-award text-warning me-1"></i>{{ c.course_title }}</span><a href="{{ url_for('certificates.certificate_pdf', cert_id=c._id) }}" target="_blank">{{ c.certificate_id }}</a></li>{% endfor %}
+          {% if not attempts and not certificates %}<li class="list-group-item text-secondary small">No quiz attempts or certificates yet.</li>{% endif %}
+        </ul>
+      </div>
+    {% elif person.role == 'staff' %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">Assigned courses ({{ courses|length }}) · {{ student_total }} students</div>
+        <ul class="list-group list-group-flush">
+          {% for row in courses %}
+            <li class="list-group-item d-flex justify-content-between">
+              <a href="{{ url_for('admin.course_edit', course_id=row.course._id) }}">{{ row.course.title }}</a>
+              <span class="small text-secondary text-capitalize">{{ row.course.status }} · {{ row.stats.get('students', 0) }} students · {{ row.stats.get('rating', 0) or '—' }}★</span>
+            </li>
+          {% else %}<li class="list-group-item text-secondary small">No courses assigned. Assign this instructor from the course editor.</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Recent activity</div>
+      <ul class="list-group list-group-flush">
+        {% for a in activity %}<li class="list-group-item small">{{ a.action }}{% if a.details %} — {{ a.details }}{% endif %}<span class="float-end text-secondary">{{ a.created_at | dt }}</span></li>
+        {% else %}<li class="list-group-item text-secondary small">No activity recorded.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

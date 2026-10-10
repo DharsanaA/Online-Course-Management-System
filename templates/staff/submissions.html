@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, empty_state %}
+{% block title %}Submissions · {{ assignment.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{{ url_for('staff.course_manage', course_id=course._id) }}">{{ course.title }}</a></li>
+  <li class="breadcrumb-item active">Submissions</li>
+</ol></nav>
+<h1 class="section-title h3 mb-1">{{ assignment.title }}</h1>
+<p class="text-secondary small mb-3">Due {{ assignment.due_date | dt }} · Max marks {{ assignment.max_marks }} · {{ subs|length }} submission(s)</p>
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Student</th><th>Submitted</th><th>Answer</th><th>File</th><th>Status</th><th>Marks</th><th>Evaluate</th></tr></thead>
+      <tbody>
+        {% for s in subs %}
+          <tr>
+            <td class="fw-semibold">{{ s.student_name }}</td>
+            <td class="small">{{ s.submitted_at | dt }}</td>
+            <td style="max-width: 280px;"><div class="small text-truncate" title="{{ s.answer_text }}">{{ s.answer_text or '—' }}</div></td>
+            <td>{% if s.file_name %}<a href="{{ url_for('files.submission', submission_id=s._id) }}"><i class="bi bi-paperclip"></i> {{ s.original_name }}</a>{% else %}—{% endif %}</td>
+            <td>{{ status_badge(s.status | capitalize) }}</td>
+            <td>{{ s.marks if s.marks is defined and s.marks is not none else '—' }}</td>
+            <td style="min-width: 260px;">
+              <form method="post" action="{{ url_for('staff.evaluate', submission_id=s._id) }}" class="d-flex flex-column gap-1">
+                {{ csrf_field() }}
+                <div class="input-group input-group-sm">
+                  <input type="number" step="0.5" min="0" max="{{ assignment.max_marks }}" name="marks" class="form-control" value="{{ s.marks if s.marks is defined else '' }}" required aria-label="Marks">
+                  <span class="input-group-text">/ {{ assignment.max_marks }}</span>
+                </div>
+                <textarea name="feedback" class="form-control form-control-sm" rows="2" maxlength="3000" placeholder="Feedback for the student">{{ s.feedback or '' }}</textarea>
+                <button class="btn btn-sm btn-primary" type="submit">{{ 'Update' if s.status == 'evaluated' else 'Save evaluation' }}</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7">{{ empty_state('bi-inbox', 'No submissions yet.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

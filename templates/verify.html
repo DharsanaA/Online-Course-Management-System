@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Verify Certificate{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="section-title h3">Certificate verification</h1>
+        <p class="text-secondary">Enter the Certificate ID printed on the certificate (format OCMS-YYYY-NNNNN).</p>
+        <form method="get" action="{{ url_for('certificates.verify') }}" class="d-flex gap-2">
+          <input class="form-control form-control-lg" name="certificate_id" value="{{ certificate_id }}"
+                 placeholder="OCMS-2026-00001" pattern="[Oo][Cc][Mm][Ss]-\d{4}-\d{5}" required aria-label="Certificate ID">
+          <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-shield-check"></i> Verify</button>
+        </form>
+        {% if result %}
+          <hr class="my-4">
+          {% if result.valid %}
+            {% set c = result.cert %}
+            <div class="alert alert-success d-flex align-items-center gap-2">
+              <i class="bi bi-patch-check-fill fs-4"></i>
+              <div><strong>Certificate Status: VALID</strong><br><small>This certificate was issued by {{ platform.name }}.</small></div>
+            </div>
+            <dl class="row mb-0">
+              <dt class="col-sm-4">Student name</dt><dd class="col-sm-8">{{ c.student_name }}</dd>
+              <dt class="col-sm-4">Course name</dt><dd class="col-sm-8">{{ c.course_title }}</dd>
+              <dt class="col-sm-4">Instructor</dt><dd class="col-sm-8">{{ c.instructor_name }}</dd>
+              <dt class="col-sm-4">Completion date</dt><dd class="col-sm-8">{{ c.completion_date | date }}</dd>
+              <dt class="col-sm-4">Certificate ID</dt><dd class="col-sm-8"><code>{{ c.certificate_id }}</code></dd>
+            </dl>
+          {% else %}
+            <div class="alert alert-danger d-flex align-items-center gap-2">
+              <i class="bi bi-x-octagon-fill fs-4"></i>
+              <div><strong>Certificate Status: INVALID</strong><br><small>No certificate matches “{{ result.searched }}”. Check the ID and try again.</small></div>
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

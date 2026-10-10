@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, empty_state %}
+{% block title %}Enrollments{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+  <div>
+    <h1 class="section-title h3 mb-0">Enrollments</h1>
+    <p class="text-secondary mb-0">{{ pg.total }} enrollment(s). Newest first, {{ pg.per_page }} per page.</p>
+  </div>
+  <span class="badge text-bg-light small">MongoDB: $sort, $skip, $limit, $lookup</span>
+</div>
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Student</th><th>Email</th><th>Course</th><th>Enrolled on</th></tr></thead>
+      <tbody>
+        {% for e in items %}
+          <tr>
+            <td class="fw-semibold">{{ e.student_name or '—' }}</td>
+            <td class="small">{{ e.student_email or '—' }}</td>
+            <td>{{ e.course_title or '—' }}</td>
+            <td class="small">{{ e.enrolled_at | dt }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">{{ empty_state('bi-people', 'No enrollments yet. Students enroll from the course catalogue.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="mt-4">{{ pagination(pg) }}</div>
+{% endblock %}

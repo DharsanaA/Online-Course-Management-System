@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-1"><i class="bi bi-file-earmark-bar-graph me-2"></i>Reports</h1>
+<p class="text-secondary">Every report is generated from live MongoDB data at the moment you download it.
+  {% if scope == 'staff' %}Reports cover only the courses assigned to you.{% endif %}</p>
+<div class="row g-4">
+  {% set items = [
+    ('courses', 'Course report', 'Titles, status, instructor, enrollments, completions and ratings.', 'all'),
+    ('enrollments', 'Enrollment report', 'Who enrolled in which course, when, and their completion status.', 'all'),
+    ('progress', 'Progress report', 'Lessons, quizzes and assignments completed per student and course.', 'all'),
+    ('quizzes', 'Quiz report', 'Every quiz attempt with score, percentage and pass/fail result.', 'all'),
+    ('assignments', 'Assignment report', 'Submissions, status, marks and submission times.', 'all'),
+    ('certificates', 'Certificate report', 'All issued certificates with IDs and completion dates.', 'all'),
+    ('reviews', 'Review & rating report', 'Student reviews and star ratings per course.', 'all'),
+    ('students', 'Student report', 'All students with enrollment and certificate counts.', 'admin'),
+    ('staff', 'Staff report', 'Instructors with assigned courses and student totals.', 'admin'),
+  ] %}
+  {% for key, title, desc, who in items if who == 'all' or scope == 'admin' %}
+    <div class="col-md-6 col-xl-4">
+      <div class="card border-0 shadow-sm h-100"><div class="card-body d-flex flex-column">
+        <h5 class="fw-bold">{{ title }}</h5>
+        <p class="small text-secondary flex-grow-1">{{ desc }}</p>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-success btn-sm flex-grow-1" href="{{ url_for('reports.download', kind=key, fmt='csv') }}"><i class="bi bi-filetype-csv"></i> CSV</a>
+          <a class="btn btn-outline-danger btn-sm flex-grow-1" href="{{ url_for('reports.download', kind=key, fmt='pdf') }}"><i class="bi bi-filetype-pdf"></i> PDF</a>
+        </div>
+      </div></div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import course_card, stat_card, empty_state %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero mb-5">
+  <div class="row align-items-center g-4 position-relative">
+    <div class="col-lg-7">
+      <span class="badge text-bg-warning mb-3">Learn at your own pace</span>
+      <h1 class="display-5">Master new skills with expert instructors</h1>
+      <p class="lead mb-4">{{ platform.description }} Enroll in structured courses with lessons, quizzes, assignments and verifiable certificates.</p>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-warning btn-lg fw-semibold" href="{{ url_for('courses.catalog') }}"><i class="bi bi-search me-1"></i>Browse Courses</a>
+        {% if not user %}
+          <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.login') }}">Login</a>
+          <a class="btn btn-light btn-lg" href="{{ url_for('auth.register') }}">Register</a>
+        {% else %}
+          <a class="btn btn-outline-light btn-lg" href="{{ url_for('courses.home') }}">Go to dashboard</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-lg-5 d-none d-lg-block">
+      <div class="card border-0 shadow-lg text-dark">
+        <div class="card-body p-4">
+          <h6 class="text-secondary text-uppercase small mb-3">Live platform statistics</h6>
+          <div class="row g-3 text-center">
+            <div class="col-6"><div class="fs-3 fw-bold text-primary">{{ stats.courses }}</div><small class="text-secondary">Published courses</small></div>
+            <div class="col-6"><div class="fs-3 fw-bold text-primary">{{ stats.students }}</div><small class="text-secondary">Students</small></div>
+            <div class="col-6"><div class="fs-3 fw-bold text-primary">{{ stats.staff }}</div><small class="text-secondary">Instructors</small></div>
+            <div class="col-6"><div class="fs-3 fw-bold text-primary">{{ stats.certificates }}</div><small class="text-secondary">Certificates issued</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="mb-5">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="section-title h3 mb-0">Popular courses</h2>
+      <p class="text-secondary mb-0">Most enrolled courses right now</p>
+    </div>
+    <a href="{{ url_for('courses.catalog') }}" class="btn btn-outline-primary btn-sm">View all</a>
+  </div>
+  {% if featured %}
+    <div class="row g-4">
+      {% for course in featured %}
+        <div class="col-sm-6 col-xl-3">{{ course_card(course, cstats, instructors.get(course.instructor_id)) }}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm">{{ empty_state('bi-journal-plus', 'No published courses yet. Check back soon!') }}</div>
+  {% endif %}
+</section>
+<section class="mb-5">
+  <h2 class="section-title h3 mb-3">Why learners choose us</h2>
+  <div class="row g-4">
+    <div class="col-md-6 col-xl-3"><div class="card h-100 border-0 shadow-sm p-4"><i class="bi bi-collection-play feature-icon mb-2"></i><h5>Structured modules</h5><p class="text-secondary small mb-0">Lessons grouped into modules with clear progress tracking.</p></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card h-100 border-0 shadow-sm p-4"><i class="bi bi-ui-checks-grid feature-icon mb-2"></i><h5>Quizzes &amp; assignments</h5><p class="text-secondary small mb-0">Timed quizzes with instant scoring and feedback from instructors.</p></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card h-100 border-0 shadow-sm p-4"><i class="bi bi-patch-check feature-icon mb-2"></i><h5>Verifiable certificates</h5><p class="text-secondary small mb-0">Download a PDF certificate with a unique ID anyone can verify.</p></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card h-100 border-0 shadow-sm p-4"><i class="bi bi-phone feature-icon mb-2"></i><h5>Learn anywhere</h5><p class="text-secondary small mb-0">Responsive design for desktop, tablet and mobile.</p></div></div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import course_card, stars, stat_card, empty_state %}
+{% block title %}{{ person.name }}{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4 d-flex flex-column flex-md-row gap-4 align-items-md-center">
+    {% if person.profile_image %}
+      <img src="{{ url_for('files.profile_image', user_id=person._id) }}" class="rounded-circle" width="120" height="120" alt="{{ person.name }}">
+    {% else %}
+      <div class="avatar-circle" style="width:120px;height:120px;font-size:3rem;">{{ person.name[0] | upper }}</div>
+    {% endif %}
+    <div class="flex-grow-1">
+      <h1 class="h3 fw-bold mb-1">{{ person.name }}</h1>
+      <p class="text-primary fw-semibold mb-2">{{ person.expertise or 'Instructor' }}</p>
+      <p class="mb-3">{{ person.bio or 'No biography provided yet.' }}</p>
+      <div class="d-flex flex-wrap gap-4 small">
+        <span><i class="bi bi-journal-bookmark me-1"></i>{{ courses|length }} courses</span>
+        <span><i class="bi bi-people me-1"></i>{{ students }} students</span>
+        <span>{{ stars(rating) }} <span class="text-secondary">({{ reviews }} reviews)</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+<h2 class="section-title h4 mb-3">Courses by {{ person.name }}</h2>
+{% if courses %}
+  <div class="row g-4">
+    {% for c in courses %}<div class="col-sm-6 col-xl-4">{{ course_card(c, cstats, person) }}</div>{% endfor %}
+  </div>
+{% else %}
+  <div class="card border-0 shadow-sm">{{ empty_state('bi-journal', 'No published courses yet.') }}</div>
+{% endif %}
+{% endblock %}

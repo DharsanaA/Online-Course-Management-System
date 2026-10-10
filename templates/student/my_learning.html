@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress_bar, status_badge, empty_state %}
+{% block title %}My Learning{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-3"><i class="bi bi-collection-play me-2"></i>My Learning</h1>
+
+{% if rows %}
+<div class="row g-4">
+  {% for r in rows %}
+    {% set c = r.course %}
+    {% set p = r.progress %}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="d-flex gap-3">
+            {% if c.image %}<img src="{{ url_for('files.course_image', course_id=c._id) }}" class="rounded" width="110" height="80" style="object-fit:cover" alt="">
+            {% else %}<div class="course-cover--placeholder rounded" style="width:110px;height:80px;font-size:1.8rem;"><i class="bi bi-journal-richtext"></i></div>{% endif %}
+            <div class="flex-grow-1">
+              <h5 class="fw-bold mb-0"><a class="link-dark text-decoration-none" href="{{ url_for('courses.detail', course_id=c._id) }}">{{ c.title }}</a></h5>
+              <div class="small text-secondary">{{ r.instructor.name if r.instructor else 'Unassigned' }} · {{ c.difficulty }}</div>
+              <div class="mt-1">{{ status_badge(p.status) }}
+                {% if r.enrollment.status == 'COMPLETED' %}<span class="badge text-bg-success">Certificate eligible</span>{% endif %}</div>
+            </div>
+          </div>
+
+          <div class="mt-3">{{ progress_bar(p.percent) }}</div>
+          <div class="row text-center small mt-3 g-2">
+            <div class="col-4"><div class="fw-bold fs-6">{{ p.lessons_done }} / {{ p.lessons_total }}</div>Lessons completed</div>
+            <div class="col-4"><div class="fw-bold fs-6">{{ p.lessons_remaining }}</div>Lessons remaining</div>
+            <div class="col-4"><div class="fw-bold fs-6">{{ p.quizzes_passed }} / {{ p.quizzes_total }}</div>Quizzes passed</div>
+          </div>
+          <div class="small mt-2 text-secondary">
+            Assignments submitted: {{ p.assignments_submitted }} / {{ p.assignments_total }} ·
+            Enrolled {{ r.enrollment.enrolled_at | date }}
+          </div>
+
+          <div class="d-flex gap-2 mt-3">
+            {% if p.lessons_total %}
+              <a class="btn btn-primary flex-grow-1" href="{{ url_for('student.continue_learning', course_id=c._id) }}"><i class="bi bi-play-fill"></i> Continue Learning →</a>
+            {% else %}
+              <button class="btn btn-secondary flex-grow-1" disabled>No lessons yet</button>
+            {% endif %}
+            {% if p.lessons_done == 0 %}
+              <form method="post" action="{{ url_for('courses.unenroll', course_id=c._id) }}" data-confirm="Cancel your enrollment in {{ c.title }}?">
+                {{ csrf_field() }}<button class="btn btn-outline-danger" type="submit">Cancel</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="card border-0 shadow-sm">
+    {{ empty_state('bi-compass', 'You have not enrolled in any course yet.') }}
+    <div class="text-center pb-4"><a class="btn btn-primary" href="{{ url_for('courses.catalog') }}">Browse courses</a></div>
+  </div>
+{% endif %}
+{% endblock %}

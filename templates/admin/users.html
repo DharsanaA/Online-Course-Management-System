@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, empty_state %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="section-title h3 mb-0"><i class="bi bi-people me-2"></i>Users</h1>
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#createUser"><i class="bi bi-person-plus"></i> Add user</button>
+</div>
+<div class="collapse mb-4" id="createUser">
+  <form method="post" class="card border-0 shadow-sm card-body">
+    {{ csrf_field() }}
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3"><label class="form-label small">Full name</label><input class="form-control" name="name" required minlength="2"></div>
+      <div class="col-md-3"><label class="form-label small">Email</label><input type="email" class="form-control" name="email" required></div>
+      <div class="col-md-2"><label class="form-label small">Role</label>
+        <select class="form-select" name="role">{% for r in roles %}<option value="{{ r }}">{{ r | capitalize }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><label class="form-label small">Temporary password</label><input type="password" class="form-control" name="password" required minlength="8"></div>
+      <div class="col-md-1"><label class="form-label small">Phone</label><input class="form-control" name="phone" maxlength="20"></div>
+      <div class="col-md-1 d-grid"><button class="btn btn-success">Create</button></div>
+    </div>
+    <div class="form-text">Share the password securely; the user can change it from their profile.</div>
+  </form>
+</div>
+
+<form method="get" class="card border-0 shadow-sm p-3 mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-6"><label class="form-label small" for="q">Search name or email</label>
+      <input id="q" class="form-control" name="q" value="{{ q }}" maxlength="80" placeholder="Search…"></div>
+    <div class="col-md-4"><label class="form-label small" for="role">Filter by role</label>
+      <select id="role" class="form-select" name="role"><option value="">All roles</option>
+        {% for r in roles %}<option value="{{ r }}" {{ 'selected' if role == r }}>{{ r | capitalize }}</option>{% endfor %}</select></div>
+    <div class="col-md-2 d-grid"><button class="btn btn-outline-primary">Search</button></div>
+  </div>
+</form>
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th class="text-end">Actions</th></tr></thead>
+      <tbody>
+        {% for u in items %}
+          <tr>
+            <td class="fw-semibold">{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td><span class="badge text-bg-{{ {'admin': 'dark', 'staff': 'info', 'student': 'primary'}[u.role] }} text-capitalize">{{ u.role }}</span></td>
+            <td>{% if u.get('is_active', True) %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+            <td class="small">{{ u.created_at | date }}</td>
+            <td class="text-end text-nowrap">
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.user_detail', user_id=u._id) }}">View / Edit</a>
+              <form class="d-inline" method="post" action="{{ url_for('admin.user_toggle', user_id=u._id) }}">
+                {{ csrf_field() }}<button class="btn btn-sm btn-outline-warning" type="submit">{{ 'Deactivate' if u.get('is_active', True) else 'Activate' }}</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6">{{ empty_state('bi-person-x', 'No users match your search.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="mt-3">{{ pagination(pg) }}</div>
+{% endblock %}

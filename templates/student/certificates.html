@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty_state %}
+{% block title %}My Certificates{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-3"><i class="bi bi-award me-2"></i>My Certificates</h1>
+<div class="row g-4">
+  {% for c in certs %}
+    <div class="col-md-6 col-xl-4">
+      <div class="card border-0 shadow-sm h-100 certificate-card">
+        <div class="card-body p-4">
+          <div class="text-uppercase small text-secondary">Course</div>
+          <h5 class="fw-bold">{{ c.course_title }}</h5>
+          <div class="small"><span class="text-secondary">Completion date</span><br>{{ c.completion_date | date }}</div>
+          <div class="small mt-2"><span class="text-secondary">Certificate ID</span><br><code>{{ c.certificate_id }}</code></div>
+          <div class="d-grid gap-2 mt-3">
+            <a class="btn btn-outline-primary" href="{{ url_for('certificates.certificate_pdf', cert_id=c._id) }}" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View Certificate</a>
+            <a class="btn btn-primary" href="{{ url_for('certificates.certificate_pdf', cert_id=c._id, download=1) }}"><i class="bi bi-file-earmark-arrow-down"></i> Download Certificate PDF</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12"><div class="card border-0 shadow-sm">{{ empty_state('bi-award', 'No certificates yet. Complete all lessons, quizzes and assignments in a course to earn one.') }}</div></div>
+  {% endfor %}
+</div>
+{% endblock %}

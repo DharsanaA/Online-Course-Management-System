@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress_bar %}
+{% block title %}Quiz result{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center">
+        <div>
+          <h1 class="h3 fw-bold mb-1">{{ quiz.title if quiz else 'Quiz' }} — Attempt #{{ attempt.attempt_no }}</h1>
+          <div class="text-secondary small">{{ attempt.student_name }} · {{ attempt.attempted_at | dt }} · Time taken {{ (attempt.time_taken_seconds // 60) }}m {{ attempt.time_taken_seconds % 60 }}s</div>
+        </div>
+        <div class="text-center">
+          <div class="display-6 fw-bold {{ 'text-success' if attempt.passed else 'text-danger' }}">{{ attempt.percentage }}%</div>
+          <div>{% if attempt.passed %}<span class="badge text-bg-success fs-6">PASSED</span>{% elif attempt.timed_out %}<span class="badge text-bg-warning fs-6">TIME EXPIRED</span>{% else %}<span class="badge text-bg-danger fs-6">NOT PASSED</span>{% endif %}</div>
+        </div>
+      </div>
+      <div class="card-footer bg-white">
+        {{ progress_bar(attempt.percentage, 'Score ' ~ attempt.score ~ ' / ' ~ attempt.total_marks ~ ' marks (pass mark ' ~ attempt.passing_percent ~ '%)', 10) }}
+      </div>
+    </div>
+
+    {% for r in review %}
+      <div class="card border-0 shadow-sm mb-3 question-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <h6 class="fw-semibold">Q{{ loop.index }}. {{ r.text }}</h6>
+            <span class="badge {{ 'text-bg-success' if r.is_correct else 'text-bg-danger' }}">{{ r.marks if r.is_correct else 0 }}/{{ r.marks }} marks</span>
+          </div>
+          <ul class="list-unstyled small mb-0">
+            {% for opt in r.options %}
+              <li class="py-1">
+                {% if loop.index0 == r.correct %}<i class="bi bi-check-circle-fill text-success me-1"></i><strong>{{ opt }}</strong>
+                {% elif loop.index0 == r.given %}<i class="bi bi-x-circle-fill text-danger me-1"></i>{{ opt }} <em class="text-secondary">(your answer)</em>
+                {% else %}<span class="ms-4">{{ opt }}</span>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endfor %}
+    <a class="btn btn-outline-primary" href="{{ url_for('student.quizzes') }}"><i class="bi bi-arrow-left"></i> Back to quizzes</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, empty_state %}
+{% block title %}Assignments{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-3"><i class="bi bi-file-earmark-check me-2"></i>Assignments</h1>
+{% if rows %}
+<div class="row g-4">
+  {% for r in rows %}
+    {% set a = r.assignment %}
+    {% set s = r.submission %}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div>
+              <h5 class="fw-bold mb-0">{{ a.title }}</h5>
+              <div class="small text-secondary">{{ r.course }} · Due {{ a.due_date | dt }}</div>
+            </div>
+            {% if r.overdue %}<span class="badge text-bg-danger">Overdue</span>{% else %}{{ status_badge(r.status) }}{% endif %}
+          </div>
+          {% if a.description %}<p class="mt-2 small">{{ a.description }}</p>{% endif %}
+          <div class="small mb-2">Max marks: {{ a.max_marks }}{% if not a.allow_late %} · <span class="text-danger">No late submissions</span>{% endif %}</div>
+          {% if a.instruction_file %}
+            <a class="btn btn-sm btn-outline-secondary mb-3" href="{{ url_for('files.assignment_instructions', assignment_id=a._id) }}"><i class="bi bi-download"></i> Instructions ({{ a.instruction_name }})</a>
+          {% endif %}
+
+          {% if s and s.status == 'evaluated' %}
+            <div class="alert alert-success py-2 mb-0">
+              <strong>Marks: {{ s.marks }} / {{ a.max_marks }}</strong>
+              {% if s.feedback %}<div class="small mt-1"><em>Feedback:</em> {{ s.feedback }}</div>{% endif %}
+            </div>
+          {% else %}
+            <form method="post" action="{{ url_for('student.submit_assignment', assignment_id=a._id) }}" enctype="multipart/form-data" class="mt-2">
+              {{ csrf_field() }}
+              <textarea class="form-control mb-2" name="answer_text" rows="3" maxlength="5000" placeholder="Write your answer here…">{{ s.answer_text if s else '' }}</textarea>
+              <input class="form-control mb-2" type="file" name="submission_file" accept=".pdf,.docx,.pptx,.txt,.zip,.png,.jpg,.jpeg">
+              {% if s and s.file_name %}<div class="small mb-2"><i class="bi bi-paperclip"></i> Current file: <a href="{{ url_for('files.submission', submission_id=s._id) }}">{{ s.original_name }}</a></div>{% endif %}
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-secondary">{% if s %}Submitted {{ s.submitted_at | dt }}{% else %}Not submitted yet{% endif %}</small>
+                <button class="btn btn-primary btn-sm" type="submit" {{ 'disabled' if r.overdue and not a.allow_late }}>{{ 'Resubmit' if s else 'Submit' }}</button>
+              </div>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="card border-0 shadow-sm">{{ empty_state('bi-file-earmark', 'No assignments yet. They appear here once your instructor publishes them.') }}</div>
+{% endif %}
+{% endblock %}

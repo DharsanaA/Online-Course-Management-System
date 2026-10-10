@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Platform Settings{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-3"><i class="bi bi-gear me-2"></i>Platform settings</h1>
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <form method="post" class="card border-0 shadow-sm card-body p-4">
+      {{ csrf_field() }}
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label" for="name">Platform name</label>
+          <input id="name" class="form-control" name="name" value="{{ settings.name }}" maxlength="80" required></div>
+        <div class="col-md-6"><label class="form-label" for="contact_email">Contact email</label>
+          <input id="contact_email" type="email" class="form-control" name="contact_email" value="{{ settings.contact_email }}" maxlength="120"></div>
+        <div class="col-12"><label class="form-label" for="description">Platform description</label>
+          <textarea id="description" class="form-control" name="description" rows="2" maxlength="300">{{ settings.description }}</textarea></div>
+        <div class="col-md-8"><label class="form-label" for="certificate_org">Certificate organization name</label>
+          <input id="certificate_org" class="form-control" name="certificate_org" value="{{ settings.certificate_org }}" maxlength="120"></div>
+        <div class="col-md-4"><label class="form-label" for="passing_percent">Default passing %</label>
+          <input id="passing_percent" type="number" class="form-control" name="passing_percent" min="1" max="100" value="{{ settings.passing_percent }}"></div>
+      </div>
+      <div class="d-flex justify-content-end mt-4"><button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Save settings</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, empty_state %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="section-title h3 mb-0"><i class="bi bi-bell me-2"></i>Notifications
+    {% if unread %}<span class="badge text-bg-danger ms-1">{{ unread }} unread</span>{% endif %}</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('notifications.index', filter='unread') }}">Unread only</a>
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('notifications.index') }}">All</a>
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+      {{ csrf_field() }}<button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-check2-all"></i> Mark all as read</button>
+    </form>
+  </div>
+</div>
+<div class="card border-0 shadow-sm">
+  <ul class="list-group list-group-flush">
+    {% for n in items %}
+      <li class="list-group-item d-flex justify-content-between align-items-start gap-3 {{ 'bg-light' if not n.is_read }}">
+        <div>
+          <div class="fw-semibold">{% if not n.is_read %}<span class="text-primary me-1">●</span>{% endif %}{{ n.title }}</div>
+          <div class="small">{{ n.message }}</div>
+          <div class="small text-secondary">{{ n.created_at | dt }}</div>
+        </div>
+        <div class="d-flex flex-column gap-1 flex-shrink-0">
+          {% if n.link %}<a class="btn btn-sm btn-outline-primary" href="{{ n.link }}">Open</a>{% endif %}
+          {% if not n.is_read %}
+            <form method="post" action="{{ url_for('notifications.mark_read', notification_id=n._id) }}">
+              {{ csrf_field() }}<button class="btn btn-sm btn-link p-0" type="submit">Mark read</button>
+            </form>
+          {% endif %}
+        </div>
+      </li>
+    {% else %}
+      <li class="list-group-item">{{ empty_state('bi-bell-slash', 'You have no notifications.') }}</li>
+    {% endfor %}
+  </ul>
+</div>
+<div class="mt-3">{{ pagination(pg) }}</div>
+{% endblock %}

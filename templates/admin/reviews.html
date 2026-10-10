@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, stars, empty_state %}
+{% block title %}Reviews{% endblock %}
+{% block content %}
+<h1 class="section-title h3 mb-3"><i class="bi bi-star me-2"></i>Reviews &amp; ratings</h1>
+<form method="get" class="card border-0 shadow-sm p-3 mb-3">
+  <div class="input-group"><input class="form-control" name="q" value="{{ q }}" placeholder="Search comments or student names" maxlength="80">
+    <button class="btn btn-outline-primary">Search</button></div>
+</form>
+<div class="card border-0 shadow-sm"><ul class="list-group list-group-flush">
+  {% for r in items %}
+    <li class="list-group-item d-flex justify-content-between gap-3">
+      <div>
+        <div class="fw-semibold">{{ titles.get(r.course_id, 'Deleted course') }}</div>
+        <div>{{ stars(r.rating) }} <span class="small text-secondary">by {{ r.student_name }} · {{ r.created_at | dt }}</span></div>
+        <p class="mb-0 small">{{ r.comment }}</p>
+      </div>
+      <form method="post" action="{{ url_for('admin.review_delete', review_id=r._id) }}" data-confirm="Remove this review?">
+        {{ csrf_field() }}<button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i> Remove</button>
+      </form>
+    </li>
+  {% else %}
+    <li class="list-group-item">{{ empty_state('bi-chat-square', 'No reviews found.') }}</li>
+  {% endfor %}
+</ul></div>
+<div class="mt-3">{{ pagination(pg) }}</div>
+{% endblock %}

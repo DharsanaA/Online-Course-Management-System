@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import question_card %}
+{% block title %}{{ 'Edit quiz' if quiz else 'New quiz' }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{{ url_for('staff.course_manage', course_id=course._id) }}">{{ course.title }}</a></li>
+  <li class="breadcrumb-item active">{{ 'Edit quiz' if quiz else 'New quiz' }}</li>
+</ol></nav>
+<h1 class="section-title h3 mb-3">{{ 'Edit quiz' if quiz else 'Create a quiz' }}</h1>
+<form method="post" novalidate>
+  {{ csrf_field() }}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8"><label class="form-label" for="title">Quiz title</label>
+          <input id="title" class="form-control" name="title" value="{{ values.title }}" required minlength="3" maxlength="150"></div>
+        <div class="col-md-4"><label class="form-label" for="module_id">Module</label>
+          <select id="module_id" class="form-select" name="module_id">
+            <option value="">Course-wide</option>
+            {% for m in modules %}<option value="{{ m._id }}" {{ 'selected' if values.module_id == m._id|string }}>{{ m.title }}</option>{% endfor %}
+          </select></div>
+        <div class="col-12"><label class="form-label" for="description">Instructions for students</label>
+          <textarea id="description" class="form-control" name="description" rows="2" maxlength="500">{{ values.description }}</textarea></div>
+        <div class="col-md-3"><label class="form-label" for="time_limit">Time limit (minutes)</label>
+          <input id="time_limit" type="number" class="form-control" name="time_limit" min="0" max="600" value="{{ values.time_limit or 0 }}">
+          <div class="form-text">0 = no time limit</div></div>
+        <div class="col-md-3"><label class="form-label" for="passing_percent">Passing percentage</label>
+          <input id="passing_percent" type="number" class="form-control" name="passing_percent" min="1" max="100" value="{{ values.passing_percent }}"></div>
+        <div class="col-md-3"><label class="form-label" for="max_attempts">Attempts allowed</label>
+          <input id="max_attempts" type="number" class="form-control" name="max_attempts" min="1" max="10" value="{{ values.max_attempts }}"></div>
+        <div class="col-md-3"><label class="form-label" for="deadline">Deadline (IST)</label>
+          <input id="deadline" type="datetime-local" class="form-control" name="deadline" value="{{ values.deadline_local }}"></div>
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="published" name="published" value="1" {{ 'checked' if values.published }}>
+            <label class="form-check-label" for="published">Publish to enrolled students (students are notified)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 fw-bold mb-0">Questions</h2>
+    <button type="button" id="add-question" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus-lg"></i> Add question</button>
+  </div>
+  <p class="small text-secondary">Select the radio button beside the correct option. All four options are required.</p>
+  <div id="questions">
+    {% for q in questions %}{{ question_card(loop.index0, q) }}{% endfor %}
+  </div>
+  <template id="question-template">{{ question_card('__i__', {'text': '', 'options': ['', '', '', ''], 'correct_index': -1, 'marks': 1}) }}</template>
+  <div class="d-flex justify-content-between mt-3 mb-5">
+    <a class="btn btn-outline-secondary" href="{{ url_for('staff.course_manage', course_id=course._id) }}">Cancel</a>
+    <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-save"></i> {{ 'Save changes' if quiz else 'Create quiz' }}</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <h1 class="section-title">About {{ platform.name }}</h1>
+    <p class="lead">{{ platform.description }}</p>
+    <p>{{ platform.name }} is a learning management system where instructors publish structured courses — modules, lessons, downloadable material, quizzes and graded assignments — and students progress at their own pace. Every step is tracked, and course completion earns a PDF certificate that anyone can verify online.</p>
+    <h3 class="section-title h4 mt-4">Learning benefits</h3>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="card border-0 shadow-sm p-3 h-100"><i class="bi bi-graph-up-arrow feature-icon"></i><h5 class="mt-2">Track your progress</h5><p class="small text-secondary mb-0">See lessons completed, quiz scores and assignment status in one place.</p></div></div>
+      <div class="col-md-6"><div class="card border-0 shadow-sm p-3 h-100"><i class="bi bi-person-video3 feature-icon"></i><h5 class="mt-2">Learn from instructors</h5><p class="small text-secondary mb-0">Get feedback on assignments and answers to your questions via announcements.</p></div></div>
+      <div class="col-md-6"><div class="card border-0 shadow-sm p-3 h-100"><i class="bi bi-award feature-icon"></i><h5 class="mt-2">Earn certificates</h5><p class="small text-secondary mb-0">Completion certificates carry a unique ID and can be verified publicly.</p></div></div>
+      <div class="col-md-6"><div class="card border-0 shadow-sm p-3 h-100"><i class="bi bi-clock-history feature-icon"></i><h5 class="mt-2">Flexible schedule</h5><p class="small text-secondary mb-0">Pick up exactly where you stopped with the Continue Learning button.</p></div></div>
+    </div>
+    <h3 class="section-title h4 mt-5">Contact</h3>
+    <div class="card border-0 shadow-sm"><div class="card-body">
+      <p class="mb-1"><i class="bi bi-envelope me-2"></i><a href="mailto:{{ platform.contact_email }}">{{ platform.contact_email }}</a></p>
+      <p class="mb-0 small text-secondary">For account, enrollment or certificate questions, email us with your registered address.</p>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

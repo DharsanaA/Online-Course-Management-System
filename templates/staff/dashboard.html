@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, status_badge, empty_state, progress_bar %}
+{% block title %}Instructor Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div>
+    <h1 class="section-title h3 mb-0">Instructor dashboard</h1>
+    <p class="text-secondary mb-0">Welcome, {{ user.name }}. Here is how your courses are doing.</p>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-2">{{ stat_card('Assigned courses', data.cards.courses, 'bi-journal-bookmark', 'primary') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Total students', data.cards.students, 'bi-people', 'info') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Avg progress', data.cards.avg_progress ~ '%', 'bi-graph-up', 'success') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Avg quiz score', data.cards.avg_quiz ~ '%', 'bi-ui-checks', 'warning') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Completed students', data.cards.completed, 'bi-trophy', 'danger') }}</div>
+  <div class="col-6 col-xl-2">{{ stat_card('Pending evaluations', data.cards.pending_assignments, 'bi-hourglass-split', 'secondary') }}</div>
+</div>
+<div class="row g-4 mb-4">
+  <div class="col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+    <h6 class="fw-bold">Student enrollment by course</h6>
+    <div style="height: 260px;"><canvas data-chart="bar" data-label="Students" data-labels='{{ data.charts.enrollment.labels | tojson }}' data-values='{{ data.charts.enrollment['values'] | tojson }}'></canvas></div>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+    <h6 class="fw-bold">Progress distribution</h6>
+    <div style="height: 260px;"><canvas data-chart="doughnut" data-label="Students" data-labels='{{ data.charts.progress.labels | tojson }}' data-values='{{ data.charts.progress['values'] | tojson }}'></canvas></div>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+    <h6 class="fw-bold">Quiz performance (average %)</h6>
+    <div style="height: 260px;"><canvas data-chart="bar" data-label="Average %" data-labels='{{ data.charts.quiz.labels | tojson }}' data-values='{{ data.charts.quiz['values'] | tojson }}'></canvas></div>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+    <h6 class="fw-bold">Course completion (students finished)</h6>
+    <div style="height: 260px;"><canvas data-chart="bar" data-label="Completed" data-labels='{{ data.charts.completion.labels | tojson }}' data-values='{{ data.charts.completion['values'] | tojson }}'></canvas></div>
+  </div></div></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-journal-bookmark me-1"></i>My courses</div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Course</th><th>Status</th><th>Students</th><th>Avg progress</th><th>Rating</th><th></th></tr></thead>
+          <tbody>
+            {% for c in data.courses %}
+              {% set a = data.analytics[c._id] %}
+              <tr>
+                <td class="fw-semibold">{{ c.title }}</td>
+                <td><span class="badge text-bg-{{ 'success' if c.status == 'published' else 'secondary' }} text-capitalize">{{ c.status }}</span></td>
+                <td>{{ a.total_students }}</td>
+                <td style="min-width: 140px;">{{ progress_bar(a.avg_progress, '', 6) }}</td>
+                <td>{{ a.rating or '—' }}</td>
+                <td class="text-end"><a class="btn btn-sm btn-primary" href="{{ url_for('staff.course_manage', course_id=c._id) }}">Manage</a>
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('staff.analytics', course_id=c._id) }}">Analytics</a></td>
+              </tr>
+            {% else %}
+              <tr><td colspan="6">{{ empty_state('bi-journal-plus', 'No courses are assigned to you yet. Ask an administrator to assign a course.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-lightning-charge me-1"></i>Recent activity</div>
+      <ul class="list-group list-group-flush">
+        {% for e in activity %}
+          <li class="list-group-item small">{{ e.text }}<span class="float-end text-secondary">{{ e.at | dt('%d %b, %I:%M %p') }}</span></li>
+        {% else %}
+          <li class="list-group-item text-secondary small">Enrollments, quiz and assignment submissions, and reviews appear here.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-calendar-event me-1"></i>Upcoming deadlines</div>
+      <ul class="list-group list-group-flush">
+        {% for d in deadlines %}
+          <li class="list-group-item"><a href="{{ d.link }}">{{ d.title }}</a>
+            <div class="small text-secondary">{{ d.kind }} · {{ d.course }} · {{ d.due | dt }}</div></li>
+        {% else %}
+          <li class="list-group-item text-secondary small">No upcoming quiz or assignment deadlines.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

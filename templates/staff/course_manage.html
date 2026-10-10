@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress_bar, status_badge, stars, empty_state %}
+{% block title %}Manage · {{ course.title }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <a class="small" href="{{ url_for('staff.dashboard') }}"><i class="bi bi-arrow-left"></i> Dashboard</a>
+    <h1 class="section-title h3 mb-0">{{ course.title }}</h1>
+    <div class="small text-secondary">
+      <span class="badge text-bg-{{ 'success' if course.status == 'published' else 'secondary' }} text-capitalize">{{ course.status }}</span>
+      · {{ course.category or 'General' }} · {{ course.difficulty }}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('courses.detail', course_id=course._id) }}"><i class="bi bi-eye"></i> Public page</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('staff.analytics', course_id=course._id) }}"><i class="bi bi-bar-chart"></i> Analytics</a>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card border-0 shadow-sm text-center p-3"><div class="fs-4 fw-bold">{{ analytics.total_students }}</div><small class="text-secondary">Students</small></div></div>
+  <div class="col-6 col-md-3"><div class="card border-0 shadow-sm text-center p-3"><div class="fs-4 fw-bold">{{ analytics.avg_progress }}%</div><small class="text-secondary">Avg progress</small></div></div>
+  <div class="col-6 col-md-3"><div class="card border-0 shadow-sm text-center p-3"><div class="fs-4 fw-bold">{{ analytics.avg_quiz }}%</div><small class="text-secondary">Avg quiz score</small></div></div>
+  <div class="col-6 col-md-3"><div class="card border-0 shadow-sm text-center p-3"><div class="fs-4 fw-bold">{{ analytics.assignments_pending }}</div><small class="text-secondary">Submissions to grade</small></div></div>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#content">Content</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#materials">Materials &amp; Notes</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#quizzes">Quizzes</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#assignments">Assignments</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#students">Students</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#announcements">Announcements</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reviews">Reviews</a></li>
+</ul>
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="content">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        {% for m in modules %}
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <strong>Module {{ loop.index }}: {{ m.title }}</strong>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#mod-{{ m._id }}">Edit</button>
+                <form method="post" action="{{ url_for('staff.module_delete', module_id=m._id) }}" data-confirm="Delete this module and all its lessons?">
+                  {{ csrf_field() }}<button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button></form>
+              </div>
+            </div>
+            <div class="collapse" id="mod-{{ m._id }}">
+              <form method="post" action="{{ url_for('staff.module_update', module_id=m._id) }}" class="card-body border-bottom">
+                {{ csrf_field() }}
+                <input class="form-control mb-2" name="title" value="{{ m.title }}" maxlength="120" required>
+                <input class="form-control mb-2" name="description" value="{{ m.description or '' }}" maxlength="500" placeholder="Description">
+                <button class="btn btn-sm btn-primary">Save module</button>
+              </form>
+            </div>
+            <ul class="list-group list-group-flush">
+              {% for l in lessons_by_module.get(m._id, []) %}
+                <li class="list-group-item">
+                  <details>
+                    <summary class="d-flex justify-content-between align-items-center">
+                      <span><i class="bi bi-play-btn me-1"></i>{{ l.title }}</span>
+                      <span class="small text-secondary">lesson {{ l.order }}</span>
+                    </summary>
+                    <form method="post" action="{{ url_for('staff.lesson_update', lesson_id=l._id) }}" class="mt-2">
+                      {{ csrf_field() }}
+                      <input class="form-control mb-2" name="title" value="{{ l.title }}" maxlength="200">
+                      <textarea class="form-control mb-2" name="content" rows="5">{{ l.content }}</textarea>
+                      <button class="btn btn-sm btn-primary">Save lesson</button>
+                    </form>
+                    <form method="post" action="{{ url_for('staff.lesson_delete', lesson_id=l._id) }}" class="mt-2" data-confirm="Delete this lesson? Student progress for it will be removed.">
+                      {{ csrf_field() }}<button class="btn btn-sm btn-outline-danger" type="submit">Delete lesson</button>
+                    </form>
+                  </details>
+                </li>
+              {% else %}
+                <li class="list-group-item text-secondary small">No lessons in this module yet.</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% else %}
+          {{ empty_state('bi-collection', 'Start by creating a module below.') }}
+        {% endfor %}
+      </div>
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white fw-semibold">Add module</div>
+          <form method="post" action="{{ url_for('staff.module_create', course_id=course._id) }}" class="card-body">
+            {{ csrf_field() }}
+            <input class="form-control mb-2" name="title" placeholder="Module title" maxlength="120" required>
+            <input class="form-control mb-2" name="description" placeholder="Short description (optional)" maxlength="500">
+            <button class="btn btn-primary w-100">Add module</button>
+          </form>
+        </div>
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-semibold">Add lesson</div>
+          <form method="post" action="{{ url_for('staff.lesson_create', course_id=course._id) }}" class="card-body">
+            {{ csrf_field() }}
+            <select class="form-select mb-2" name="module_id">
+              <option value="">No module</option>
+              {% for m in modules %}<option value="{{ m._id }}">{{ m.title }}</option>{% endfor %}
+            </select>
+            <input class="form-control mb-2" name="title" placeholder="Lesson title" maxlength="200" required>
+            <textarea class="form-control mb-2" name="content" rows="6" placeholder="Lesson content" maxlength="20000" required></textarea>
+            <button class="btn btn-primary w-100">Publish lesson</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIALS -->
+  <div class="tab-pane fade" id="materials">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead><tr><th>Title</th><th>Type</th><th>Lesson</th><th>Uploaded</th><th></th></tr></thead>
+              <tbody>
+                {% for mat in materials %}
+                  <tr>
+                    <td><a href="{{ url_for('files.material', material_id=mat._id) }}"><i class="bi bi-download me-1"></i>{{ mat.title }}</a></td>
+                    <td><span class="badge text-bg-{{ 'primary' if mat.kind == 'note' else 'secondary' }}">{{ 'Overview note' if mat.kind == 'note' else 'Material' }}</span></td>
+                    <td class="small">{{ lessons|selectattr('_id', 'equalto', mat.lesson_id)|map(attribute='title')|first or 'Course-wide' }}</td>
+                    <td class="small">{{ mat.uploaded_at | date }}</td>
+                    <td class="text-end">
+                      <form method="post" action="{{ url_for('staff.material_delete', material_id=mat._id) }}" data-confirm="Delete this file?">
+                        {{ csrf_field() }}<button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button></form>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="5">{{ empty_state('bi-folder2', 'No files uploaded yet.') }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-semibold">Upload notes or material</div>
+          <form method="post" action="{{ url_for('staff.material_upload', course_id=course._id) }}" enctype="multipart/form-data" class="card-body">
+            {{ csrf_field() }}
+            <input class="form-control mb-2" name="title" placeholder="Display title" maxlength="150">
+            <select class="form-select mb-2" name="kind">
+              <option value="note">Course overview notes (PDF)</option>
+              <option value="material">Study material / reference</option>
+            </select>
+            <select class="form-select mb-2" name="lesson_id">
+              <option value="">Course-wide (not tied to a lesson)</option>
+              {% for l in lessons %}<option value="{{ l._id }}">{{ l.title }}</option>{% endfor %}
+            </select>
+            <input class="form-control mb-2" type="file" name="file" required accept=".pdf,.docx,.pptx,.txt,.zip,.png,.jpg,.jpeg">
+            <div class="form-text mb-2">Max 20 MB. Allowed: PDF, DOCX, PPTX, TXT, ZIP, PNG, JPG.</div>
+            <button class="btn btn-primary w-100">Upload</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZZES -->
+  <div class="tab-pane fade" id="quizzes">
+    <div class="d-flex justify-content-end mb-2">
+      <a class="btn btn-primary" href="{{ url_for('staff.quiz_create', course_id=course._id) }}"><i class="bi bi-plus-lg"></i> New quiz</a>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Quiz</th><th>Module</th><th>Questions</th><th>Pass %</th><th>Time</th><th>Deadline</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for q in quizzes %}
+              <tr>
+                <td class="fw-semibold">{{ q.title }}</td>
+                <td class="small">{{ module_map.get(q.module_id, '—') }}</td>
+                <td>{{ q.questions|length if q.questions is defined else '—' }}</td>
+                <td>{{ q.passing_percent }}%</td>
+                <td>{{ (q.time_limit ~ ' min') if q.time_limit else 'Untimed' }}</td>
+                <td class="small">{{ q.deadline | dt if q.deadline else '—' }}</td>
+                <td>{% if q.published %}<span class="badge text-bg-success">Published</span>{% else %}<span class="badge text-bg-secondary">Draft</span>{% endif %}</td>
+                <td class="text-end text-nowrap">
+                  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('staff.quiz_edit', quiz_id=q._id) }}">Edit</a>
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('staff.analytics', course_id=course._id) }}#quiz-stats">Results</a>
+                  <form class="d-inline" method="post" action="{{ url_for('staff.quiz_delete', quiz_id=q._id) }}" data-confirm="Delete this quiz and all of its attempts?">
+                    {{ csrf_field() }}<button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button></form>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="8">{{ empty_state('bi-ui-checks', 'No quizzes yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSIGNMENTS -->
+  <div class="tab-pane fade" id="assignments">
+    <div class="d-flex justify-content-end mb-2">
+      <a class="btn btn-primary" href="{{ url_for('staff.assignment_create', course_id=course._id) }}"><i class="bi bi-plus-lg"></i> New assignment</a>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Assignment</th><th>Due</th><th>Max marks</th><th>Late allowed</th><th></th></tr></thead>
+          <tbody>
+            {% for a in assignments %}
+              <tr>
+                <td class="fw-semibold">{{ a.title }}</td>
+                <td class="small">{{ a.due_date | dt }}</td>
+                <td>{{ a.max_marks }}</td>
+                <td>{{ 'Yes' if a.allow_late else 'No' }}</td>
+                <td class="text-end text-nowrap">
+                  <a class="btn btn-sm btn-primary" href="{{ url_for('staff.submissions', assignment_id=a._id) }}">Submissions</a>
+                  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('staff.assignment_edit', assignment_id=a._id) }}">Edit</a>
+                  <form class="d-inline" method="post" action="{{ url_for('staff.assignment_delete', assignment_id=a._id) }}" data-confirm="Delete this assignment and every submission?">
+                    {{ csrf_field() }}<button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button></form>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5">{{ empty_state('bi-file-earmark', 'No assignments yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENTS -->
+  <div class="tab-pane fade" id="students">
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0" data-search-table>
+          <thead><tr><th>Student</th><th>Enrolled</th><th style="min-width:160px;">Progress</th><th>Lessons</th><th>Quiz avg</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in students %}
+              <tr>
+                <td><div class="fw-semibold">{{ row.student.name }}</div><small class="text-secondary">{{ row.student.email }}</small></td>
+                <td class="small">{{ row.enrollment.enrolled_at | date }}</td>
+                <td>{{ progress_bar(row.progress.percent, '', 6) }}</td>
+                <td>{{ row.progress.lessons_done }} / {{ row.progress.lessons_total }}</td>
+                <td>{{ (row.quiz_avg ~ '%') if row.quiz_avg is not none else '—' }}</td>
+                <td>{{ status_badge(row.progress.status) }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="6">{{ empty_state('bi-people', 'No students are enrolled in this course yet.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANNOUNCEMENTS -->
+  <div class="tab-pane fade" id="announcements">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        {% for a in announcements %}
+          <div class="card border-0 shadow-sm mb-3"><div class="card-body">
+            <div class="d-flex justify-content-between"><h6 class="fw-bold mb-1">{{ a.title }}</h6>
+              <form method="post" action="{{ url_for('staff.announcement_delete', announcement_id=a._id) }}" data-confirm="Delete this announcement?">
+                {{ csrf_field() }}<button class="btn btn-sm btn-link text-danger p-0" type="submit">Delete</button></form></div>
+            <p class="mb-1">{{ a.message }}</p>
+            <small class="text-secondary">{{ a.created_by_name }} · {{ a.created_at | dt }} · {{ a.status }}</small>
+          </div></div>
+        {% else %}
+          {{ empty_state('bi-megaphone', 'No announcements yet.') }}
+        {% endfor %}
+      </div>
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm"><div class="card-header bg-white fw-semibold">New announcement</div>
+          <form method="post" action="{{ url_for('staff.announcement_create', course_id=course._id) }}" class="card-body">
+            {{ csrf_field() }}
+            <input class="form-control mb-2" name="title" placeholder="e.g. Quiz 2 is open tomorrow" maxlength="150" required>
+            <textarea class="form-control mb-2" name="message" rows="4" maxlength="2000" required placeholder="Message to enrolled students"></textarea>
+            <button class="btn btn-primary w-100">Post to enrolled students</button>
+          </form></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="tab-pane fade" id="reviews">
+    <div class="card border-0 shadow-sm"><ul class="list-group list-group-flush">
+      {% for r in reviews %}
+        <li class="list-group-item"><div class="d-flex justify-content-between"><strong>{{ r.student_name }}</strong><small class="text-secondary">{{ r.created_at | date }}</small></div>
+          <div>{{ stars(r.rating) }}</div><p class="mb-0 small">{{ r.comment }}</p></li>
+      {% else %}
+        <li class="list-group-item">{{ empty_state('bi-star', 'No reviews yet.') }}</li>
+      {% endfor %}
+    </ul></div>
+  </div>
+</div>
+{% endblock %}
