@@ -33,7 +33,10 @@ def create_app():
     app.config.from_object(Config)
 
     for folder in UPLOAD_FOLDERS:
-        os.makedirs(os.path.join(app.config["UPLOAD_ROOT"], folder), exist_ok=True)
+        try:
+            os.makedirs(os.path.join(app.config["UPLOAD_ROOT"], folder), exist_ok=True)
+        except OSError:
+            pass
 
     db = init_db(app)
     create_indexes(db)

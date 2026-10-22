@@ -16,3 +16,4 @@ uploads/*
 !uploads/*/
 !uploads/*/.gitkeep
 .venv/
+.vercel/
